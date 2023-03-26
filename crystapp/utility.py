@@ -1,3 +1,6 @@
+import logging
+from socket import socket, AF_INET, SOCK_DGRAM, SOCK_STREAM
+
 # devices configurtion
 cfg = {
     "devices": [{
@@ -28,3 +31,24 @@ def broadcast(hostname, port):
     test_3 = JulaboCF(test_2)
     result = test_3.status()
     print(result)
+
+def set_ip(is_public):
+    if not is_public:
+        return "localhost"
+    return get_ip()
+
+def get_ip():
+    """ https://stackoverflow.com/a/28950776/2475919 """
+    _log = logging.getLogger(__name__)
+    with socket(AF_INET, SOCK_DGRAM) as searcher:
+        searcher.settimeout(0)
+        try:
+            # doesn't even have to be reachable
+            searcher.connect(('10.254.254.254', 1))
+            ip = searcher.getsockname()[0]
+        except Exception:
+            ip = '127.0.0.1'
+            _log.info("Defaulting to localhost!")
+        finally:
+            searcher.close()
+        return ip
