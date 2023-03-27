@@ -1,5 +1,7 @@
 import logging
+
 from socket import socket, AF_INET, SOCK_DGRAM
+from asyncua import uamethod
 from asyncua.sync import Server as SyncServer, ua, SyncNode
 
 # devices configurtion
@@ -76,5 +78,21 @@ def write_props(node:SyncNode):
     children:list[SyncNode] = node.get_properties()
     for child in children:
         q_name:ua.QualifiedName = child.read_browse_name()
+        # default value, to be readable
         value = 0 if q_name.Name != "Status" else "bla"
         child.write_value(value, get_property_type(child))
+
+def binder(bound):
+    @uamethod
+    def _method(parent:ua.NodeId, show:bool):
+        return bound()
+    return _method
+
+def match_methods(node:SyncNode, methods:dict[str, callable]):
+    # get_methods not implemented for SyncNode
+    arg = {"refs":ua.ObjectIds.HasComponent,"nodeclassmask":ua.NodeClass.Method}
+    children:list[SyncNode] = node.get_children(**arg)
+    for child in children:
+        q_name = child.read_browse_name()
+        method = methods[str(q_name.Name).lower()] 
+        yield child, method
