@@ -4,6 +4,9 @@ import julabo
 from crystapp.mocks import JulaboMock
 
 class integrationTester(unittest.TestCase):
+    def test_server_temp(self):
+        pass
+
     def test_mock_temp(self):
         # Arrange
         mock = JulaboMock(".venv",".fixture.yml")

@@ -25,3 +25,8 @@ class Server:
     def _silence_loggers(self):
         for _log in self._silence:
             logging.getLogger(_log).setLevel(logging.CRITICAL)
+
+    def populate(self, types_path, devices_path:list):
+        self._server.import_xml(types_path)
+        for path in devices_path:
+            self._server.import_xml(path)
