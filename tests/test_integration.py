@@ -2,10 +2,13 @@ import unittest
 import julabo
 
 from crystapp.mocks import JulaboMock
+from crystapp.server import Server
 
 class integrationTester(unittest.TestCase):
     def test_server_temp(self):
-        pass
+        # Arrange
+        sut = Server()
+        sut.populate(".config/crystapp.xml", [".config/localhost.xml"])
 
     def test_mock_temp(self):
         # Arrange

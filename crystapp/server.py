@@ -5,11 +5,11 @@ from .utility import set_ip
 
 class Server:
     def __init__(self) -> None:
+        self._log = logging.getLogger(f"crystapp.{__name__}")
+        self._silence = ["asyncua.server.address_space", "asyncua.common.xmlimporter"]
+        self._silence_loggers()
         # default permissive manager + internal session
         self._server = SyncServer()
-        self._log = logging.getLogger(f"crystapp.{__name__}")
-        self._silence = "asyncua.server.address_space"
-        self._silence_loggers()
 
         # Narrov down security
         self._server.set_security_policy([ua.SecurityPolicyType.NoSecurity])
