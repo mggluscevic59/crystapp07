@@ -1,5 +1,6 @@
 import logging
-from socket import socket, AF_INET, SOCK_DGRAM, SOCK_STREAM
+from socket import socket, AF_INET, SOCK_DGRAM
+from asyncua.sync import Server as SyncServer, ua, SyncNode
 
 # devices configurtion
 cfg = {
@@ -52,3 +53,28 @@ def get_ip():
         finally:
             searcher.close()
         return ip
+
+def get_property_type(prop_node:SyncNode):
+    prop_type_node:ua.NodeId = prop_node.read_data_type()
+    prop_type = ua.VariantType.Int32
+    try:
+        prop_type = ua.VariantType(prop_type_node.Identifier)
+    except ValueError:
+        print(f"Variant Type: {prop_type_node}")
+    return prop_type
+
+def find_node_by_namespace_index(idx:int, server:SyncServer):
+    children:list[SyncNode] = server._server.nodes.objects.get_children()
+    if idx > 2:
+        for child in children:
+            node_id:ua.NodeId = child.nodeid
+            if node_id.NamespaceIndex == idx:
+                return child
+    return
+
+def write_props(node:SyncNode):
+    children:list[SyncNode] = node.get_properties()
+    for child in children:
+        q_name:ua.QualifiedName = child.read_browse_name()
+        value = 0 if q_name.Name != "Status" else "bla"
+        child.write_value(value, get_property_type(child))

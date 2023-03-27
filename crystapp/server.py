@@ -1,7 +1,7 @@
 import logging
 
-from asyncua.sync import Server as SyncServer, ua
-from .utility import set_ip
+from asyncua.sync import Server as SyncServer, ua, SyncNode
+from .utility import set_ip, find_node_by_namespace_index
 
 class Server:
     def __init__(self) -> None:
@@ -26,7 +26,13 @@ class Server:
         for _log in self._silence:
             logging.getLogger(_log).setLevel(logging.CRITICAL)
 
+    def _populate_device(self, device:SyncNode):
+        pass
+
     def populate(self, types_path, devices_path:list):
         self._server.import_xml(types_path)
         for path in devices_path:
             self._server.import_xml(path)
+        
+        all_namespaces = self._server.get_namespace_array()
+        last_namespace = all_namespaces[len(all_namespaces)-1]
