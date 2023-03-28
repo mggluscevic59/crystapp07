@@ -19,9 +19,16 @@ class Server:
         # public endpoint
         self._server.set_endpoint(f"opc.tcp://{set_ip(True)}:4840")
 
-    def __del__(self):
-        if self._server.tloop.is_alive():
-            self._server.stop()
+    # def __del__(self):
+    #     if self._server.tloop.is_alive():
+    #         self._server.stop()
+
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.stop()
 
     def start(self):
         self._server.start()
