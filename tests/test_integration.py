@@ -7,8 +7,8 @@ from crystapp.server import Server
 class integrationTester(unittest.TestCase):
     def test_server_temp(self):
         # Arrange
-        # mock = JulaboMock(".venv",".fixture.yml")
-        # mock.start()
+        mock = JulaboMock(".venv",".fixture.yml")
+        mock.start()
         sut = Server()
         sut.populate(".config/crystapp.xml", [".config/localhost.xml"])
         idx_1 = sut._server.get_namespace_index("tcp://localhost:5050")
@@ -19,6 +19,7 @@ class integrationTester(unittest.TestCase):
         sut.start()
         result = sut._server.nodes.objects.get_child([f"{idx_1}:JulaboMagio_test", f"{idx_2}:External_temperature"]).read_value()
         sut.stop()
+        mock.stop()
 
         # Assert
         self.assertEqual("28.22", result)
@@ -37,6 +38,7 @@ class integrationTester(unittest.TestCase):
 
         # Act
         result = sut.external_temperature()
+        mock.stop()
 
         # Assert
-        self.assertEqual("28.22", result)
+        self.assertEqual(28.22, result)
