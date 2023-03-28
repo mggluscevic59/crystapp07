@@ -71,17 +71,18 @@ class integrationTester(unittest.TestCase):
         # Arrange
         idx = []
         result = None
-        with Server() as sut:
-            sut.populate(".config/crystapp.xml", [".config/localhost.xml"])
-            # TODO: optimise -> no hidden server access
-            idx.append(sut._server.get_namespace_index("tcp://localhost:5050"))
-            idx.append(sut._server.get_namespace_index("https://crystapc.fkit.hr/"))
-            objects = sut._server.nodes.objects
-            index = [f"{idx[0]}:JulaboMagio_test", f"{idx[1]}:External_temperature"]
-            ext_temp = objects.get_child(index)
+        with JulaboMock(self._env_path, self._mock_path) as mock:
+            with Server() as sut:
+                sut.populate(".config/crystapp.xml", [".config/localhost.xml"])
+                # TODO: optimise -> no hidden server access
+                idx.append(sut._server.get_namespace_index("tcp://localhost:5050"))
+                idx.append(sut._server.get_namespace_index("https://crystapc.fkit.hr/"))
+                objects = sut._server.nodes.objects
+                # FIXME: object & property have different namespace
+                index = [f"{idx[0]}:JulaboMagio_test", f"{idx[1]}:External_temperature"]
+                ext_temp = objects.get_child(index)
 
-            # Act
-            result = ext_temp.read_value()
-
+                # Act
+                result = ext_temp.read_value()
         # Assert
         self.assertEqual("28.22", result)

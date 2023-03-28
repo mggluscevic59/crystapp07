@@ -19,10 +19,6 @@ class Server:
         # public endpoint
         self._server.set_endpoint(f"opc.tcp://{set_ip(True)}:4840")
 
-    # def __del__(self):
-    #     if self._server.tloop.is_alive():
-    #         self._server.stop()
-
     def __enter__(self):
         self.start()
         return self
@@ -34,7 +30,12 @@ class Server:
         self._server.start()
 
     def stop(self):
-        self._server.stop()
+        if self._server.aio_obj.bserver:
+            # if connected, stop connection
+            self._server.stop()
+        if self._server.tloop.is_alive():
+            # if looping, stop the loop
+            self._server.tloop.stop() 
 
     def _silence_loggers(self):
         for _log in self._silence:
@@ -42,12 +43,12 @@ class Server:
 
     def _connect_driver(self, url):
         args = {
-            "url"               : "tcp://178.238.237.121:5050",
+            # "url"               : "tcp://178.238.237.121:5050",
             # "url"               : f"tcp://{url}:5050",
             "concurrency"       : "syncio",
             "auto_reconnect"    : True
         }
-        device = julabo.JulaboCF(julabo.connection_for_url(**args))
+        device = julabo.JulaboCF(julabo.connection_for_url(url=url, **args))
         # not to be binded from device
         _excluded = ["__","write"]
         for name in dir(device):
@@ -57,6 +58,9 @@ class Server:
                 if not any(x in name for x in _excluded):
                     # setattr(self, name, bound)
                     self._binded[name] = bound
+
+    def _populate_property(self, node, bindings):
+        pass
 
     def populate(self, types_path, devices_path:list):
         self._server.import_xml(types_path)
@@ -69,8 +73,9 @@ class Server:
         idx = self._server.get_namespace_index(last_namespace)
         device = find_node_by_namespace_index(idx, self)
 
-        write_props(device)
-        
+        # FIXME: url from 'any' to 'urlBytes'{schema://hostname:port}
         self._connect_driver(last_namespace)
+        # populate binder -> write props:all
+        write_props(self._binded, device)
         for node, method in match_methods(device, self._binded):
             self._server.link_method(node, binder(method))

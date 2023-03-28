@@ -74,13 +74,17 @@ def find_node_by_namespace_index(idx:int, server:SyncServer):
                 return child
     return
 
-def write_props(node:SyncNode):
-    children:list[SyncNode] = node.get_properties()
-    for child in children:
-        q_name:ua.QualifiedName = child.read_browse_name()
-        # default value, to be readable
-        value = 0 if q_name.Name != "Status" else "bla"
-        child.write_value(value, get_property_type(child))
+def write_props(methods:dict[str, callable], node:SyncNode, is_child:bool = False):
+    if is_child:
+        feed_property_from_dictionary(node, methods)
+    else:
+        children:list[SyncNode] = node.get_properties()
+        for child in children:
+            q_name:ua.QualifiedName = child.read_browse_name()
+            feed_property_from_dictionary(child, methods)
+            # default value, to be readable
+            # value = 0 if q_name.Name != "Status" else "bla"
+            # child.write_value(value, get_property_type(child))
 
 def binder(bound):
     @uamethod
@@ -96,3 +100,9 @@ def match_methods(node:SyncNode, methods:dict[str, callable]):
         q_name = child.read_browse_name()
         method = methods[str(q_name.Name).lower()] 
         yield child, method
+
+def feed_property_from_dictionary(node:SyncNode, bindings:dict):
+    q_name:ua.QualifiedName = node.read_browse_name()
+    # call foo from dict where key == qualified name with lower first letter
+    value = bindings[str(q_name.Name).lower()]()
+    node.write_value(value, get_property_type(node))

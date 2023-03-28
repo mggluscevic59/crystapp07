@@ -1,7 +1,14 @@
 import logging
 import subprocess
+import psutil
 
 from pathlib import Path
+
+def kill(proc_pid):
+    process = psutil.Process(proc_pid)
+    for proc in process.children(recursive=True):
+        proc.kill()
+    process.kill()
 
 class JulaboMock:
     def __init__(self, environment, fixture) -> None:
@@ -9,6 +16,9 @@ class JulaboMock:
         self._env = Path(environment)
         self._cmd = Path(fixture)
         self._spawn = None
+
+    # def __del__(self):
+    #     self.stop()
 
     def start(self):
         if not self._spawn:
@@ -25,6 +35,10 @@ class JulaboMock:
 
     def stop(self):
         self._spawn.terminate()
+        try:
+            self._spawn.wait(timeout=3)
+        except subprocess.TimeoutExpired:
+            kill(self._spawn.pid)
 
     def __enter__(self):
         self.start()
