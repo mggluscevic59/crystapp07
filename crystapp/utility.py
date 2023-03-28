@@ -2,7 +2,8 @@ import logging
 
 from socket import socket, AF_INET, SOCK_DGRAM
 from asyncua import uamethod
-from asyncua.sync import Server as SyncServer, ua, SyncNode
+from asyncua.sync import ua, SyncNode
+# from .server import Server
 
 # devices configurtion
 cfg = {
@@ -65,7 +66,7 @@ def get_property_type(prop_node:SyncNode):
         print(f"Variant Type: {prop_type_node}")
     return prop_type
 
-def find_node_by_namespace_index(idx:int, server:SyncServer):
+def find_node_by_namespace_index(idx:int, server):
     children:list[SyncNode] = server._server.nodes.objects.get_children()
     if idx > 2:
         for child in children:
