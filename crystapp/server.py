@@ -43,8 +43,6 @@ class Server:
 
     def _connect_driver(self, url):
         args = {
-            # "url"               : "tcp://178.238.237.121:5050",
-            # "url"               : f"tcp://{url}:5050",
             "concurrency"       : "syncio",
             "auto_reconnect"    : True
         }
@@ -56,7 +54,6 @@ class Server:
             if callable(bound := getattr(device, name)):
                 # not containing forbiden characters
                 if not any(x in name for x in _excluded):
-                    # setattr(self, name, bound)
                     self._binded[name] = bound
 
     def _populate_property(self, node, bindings):

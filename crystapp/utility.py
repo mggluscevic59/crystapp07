@@ -4,7 +4,6 @@ import copy
 from socket import socket, AF_INET, SOCK_DGRAM
 from asyncua import uamethod
 from asyncua.sync import ua, SyncNode
-# from .server import Server
 
 # devices configurtion
 cfg = {
@@ -82,11 +81,8 @@ def write_props(methods:dict[str, callable], node:SyncNode, is_child:bool = Fals
     else:
         children:list[SyncNode] = node.get_properties()
         for child in children:
-            q_name:ua.QualifiedName = child.read_browse_name()
+            # q_name:ua.QualifiedName = child.read_browse_name()
             feed_property_from_dictionary(child, methods)
-            # default value, to be readable
-            # value = 0 if q_name.Name != "Status" else "bla"
-            # child.write_value(value, get_property_type(child))
 
 def binder(bound):
     @uamethod
