@@ -9,7 +9,18 @@ class integrationTester(unittest.TestCase):
         self._env_path = ".venv"
         self._mock_path = ".fixture.yml"
         self._mock_url = "tcp://localhost:5050"
+
+        # virtual device server for everybody
+        self.fixture = JulaboMock(self._env_path,self._mock_path)
+        # self.fixture = JulaboMock(".venv",".fixture.yml")
+        self.fixture.start()
+
         return super().setUp()
+
+    def tearDown(self) -> None:
+        self.fixture.stop()
+
+        return super().tearDown()
     
     # def test_server_temp(self):
     #     # Arrange
@@ -33,8 +44,8 @@ class integrationTester(unittest.TestCase):
     def test_mock_temp(self):
         # Arrange
         # FIXME: debug mock running from root folder
-        mock = JulaboMock(".venv",".fixture.yml")
-        mock.start()
+        # mock = JulaboMock(".venv",".fixture.yml")
+        # mock.start()
         fixture = {
             "url"               : "tcp://localhost:5050",
             "concurrency"       : "syncio",
@@ -44,7 +55,7 @@ class integrationTester(unittest.TestCase):
 
         # Act
         result = sut.external_temperature()
-        mock.stop()
+        # mock.stop()
 
         # Assert
         self.assertEqual(28.22, result)
@@ -52,17 +63,17 @@ class integrationTester(unittest.TestCase):
     def test_mock_temp_min(self):
         # Arrange
         result = 0
-        with JulaboMock(self._env_path, self._mock_path) as mock:
-            fixture = {
-                "url"               : self._mock_url,
-                "concurrency"       : "syncio",
-                "auto_reconnect"    : True
-            }
-            sut = julabo.JulaboCF(julabo.connection_for_url(**fixture))
-            # TODO: act with internal mock/device connection -> wrapper
+        # with JulaboMock(self._env_path, self._mock_path) as mock:
+        fixture = {
+            "url"               : self._mock_url,
+            "concurrency"       : "syncio",
+            "auto_reconnect"    : True
+        }
+        sut = julabo.JulaboCF(julabo.connection_for_url(**fixture))
+        # TODO: act with internal mock/device connection -> wrapper
 
-            # Act
-            result = sut.external_temperature()
+        # Act
+        result = sut.external_temperature()
 
         # Assert
         self.assertEqual(28.22, result)
@@ -71,18 +82,18 @@ class integrationTester(unittest.TestCase):
         # Arrange
         idx = []
         result = None
-        with JulaboMock(self._env_path, self._mock_path) as mock:
-            with Server() as sut:
-                sut.populate(".config/crystapp.xml", [".config/localhost.xml"])
-                # TODO: optimise -> no hidden server access
-                idx.append(sut._server.get_namespace_index("tcp://localhost:5050"))
-                idx.append(sut._server.get_namespace_index("https://crystapc.fkit.hr/"))
-                objects = sut._server.nodes.objects
-                # FIXME: object & property have different namespace
-                index = [f"{idx[0]}:JulaboMagio_test", f"{idx[1]}:External_temperature"]
-                ext_temp = objects.get_child(index)
+        # with JulaboMock(self._env_path, self._mock_path) as mock:
+        with Server() as sut:
+            sut.populate(".config/crystapp.xml", [".config/localhost.xml"])
+            # TODO: optimise -> no hidden server access
+            idx.append(sut._server.get_namespace_index("tcp://localhost:5050"))
+            idx.append(sut._server.get_namespace_index("https://crystapc.fkit.hr/"))
+            objects = sut._server.nodes.objects
+            # FIXME: object & property have different namespace
+            index = [f"{idx[0]}:JulaboMagio_test", f"{idx[1]}:External_temperature"]
+            ext_temp = objects.get_child(index)
 
-                # Act
-                result = ext_temp.read_value()
+            # Act
+            result = ext_temp.read_value()
         # Assert
-        self.assertEqual("28.22", result)
+        self.assertEqual(28.22, result)

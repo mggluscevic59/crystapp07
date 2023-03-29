@@ -1,4 +1,5 @@
 import logging
+import copy
 
 from socket import socket, AF_INET, SOCK_DGRAM
 from asyncua import uamethod
@@ -107,3 +108,27 @@ def feed_property_from_dictionary(node:SyncNode, bindings:dict):
     # call foo from dict where key == qualified name with lower first letter
     value = bindings[str(q_name.Name).lower()]()
     node.write_value(value, get_property_type(node))
+
+def find_type_by_namespace_index(idx:int, server):
+    index = ["0:ObjectTypes","0:BaseObjectType"]
+    base_obj_type = server._server.nodes.types.get_child(index)
+    children:list[SyncNode] = base_obj_type.get_children()
+    for child in children:
+        node_id:ua.NodeId = child.nodeid
+        if node_id.NamespaceIndex == idx:
+            return child
+    return
+
+def import_xml_and_get_node(path:str, server) -> list[SyncNode]:
+    namespaces = []
+    nodes = []
+    old_namespace = copy.copy(server._server.get_namespace_array())
+    server._server.import_xml(path)
+    new_namespace = server._server.get_namespace_array()
+    for element in new_namespace:
+        if element not in old_namespace:
+            namespaces.append(element)
+    for namespace in namespaces:
+        idx = server._server.get_namespace_index(namespace)
+        nodes.append(find_type_by_namespace_index(idx, server))
+    return nodes
