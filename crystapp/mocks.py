@@ -22,10 +22,9 @@ class JulaboMock:
                 "--log-level",
                 logging.getLevelName(self._log.getEffectiveLevel())
                 ]
-            # cmd_string = " ".join(cmd_list)
             self._spawn = subprocess.Popen(cmd_list)
             # HACK: give time to do
-            time.sleep(.25)
+            time.sleep(.27)
 
     def stop(self):
         self._spawn.terminate()
