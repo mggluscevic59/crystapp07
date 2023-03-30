@@ -6,6 +6,8 @@ from socket import socket, AF_INET, SOCK_DGRAM
 from asyncua import uamethod
 from asyncua.sync import ua, SyncNode
 
+# logging.getLogger(__name__)
+
 # devices configurtion
 cfg = {
     "devices": [{
@@ -76,14 +78,14 @@ def find_node_by_namespace_index(idx:int, server):
                 return child
     return
 
-def write_props(methods:dict[str, callable], node:SyncNode, is_child:bool = False):
+def write_props(methods:dict[str, callable], node:SyncNode, logger:logging, is_child:bool = False):
     if is_child:
-        feed_property_from_dictionary(node, methods)
+        feed_property_from_dictionary(node, methods, logger)
     else:
         children:list[SyncNode] = node.get_properties()
         for child in children:
             # q_name:ua.QualifiedName = child.read_browse_name()
-            feed_property_from_dictionary(child, methods)
+            feed_property_from_dictionary(child, methods, logger)
 
 def binder(bound):
     @uamethod
@@ -100,10 +102,14 @@ def match_methods(node:SyncNode, methods:dict[str, callable]):
         method = methods[str(q_name.Name).lower()] 
         yield child, method
 
-def feed_property_from_dictionary(node:SyncNode, bindings:dict):
+def feed_property_from_dictionary(node:SyncNode, bindings:dict, logger:logging):
     q_name:ua.QualifiedName = node.read_browse_name()
     # call foo from dict where key == qualified name with lower first letter
-    value = bindings[str(q_name.Name).lower()]()
+    try:
+        value = bindings[str(q_name.Name).lower()]()
+    except Exception:
+        value = 0 if q_name.Name != "Status" else "Not available"
+        logger.info("Connect call failed")
     node.write_value(value, get_property_type(node))
 
 def find_type_by_namespace_index(idx:int, server):
