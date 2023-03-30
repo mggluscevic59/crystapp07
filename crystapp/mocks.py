@@ -10,21 +10,28 @@ class JulaboMock:
     def __init__(self, environment, fixture) -> None:
         self._log = logging.getLogger(__name__)
         self._env = Path(environment)
-        self._cmd = Path(fixture)
+        self._fxtr = Path(fixture)
+        self._cmd = [
+            f"{self._env.absolute()}/bin/python3.10",
+            f"{self._env.absolute()}/bin/sinstruments-server",
+            "-c",
+            str(self._fxtr.absolute()),
+            "--log-level",
+            logging.getLevelName(self._log.getEffectiveLevel())
+        ]
+
         self._spawn = None
 
     def start(self):
-        if not self._spawn:
-            cmd_list = [ f"{self._env.absolute()}/bin/python3.10",
-              f"{self._env.absolute()}/bin/sinstruments-server",
-                "-c",
-                str(self._cmd.absolute()),
-                "--log-level",
-                logging.getLevelName(self._log.getEffectiveLevel())
-                ]
-            self._spawn = subprocess.Popen(cmd_list)
-            # HACK: give time to do
-            time.sleep(.27)
+        # KISS
+        if self._spawn and not self._spawn.poll():
+            # is spawned and not pooling
+            self._log.info("Mock device server already instatiated, exiting...")
+            # TODO: if is_open, close - re-open
+            return
+        self._spawn = subprocess.Popen(self._cmd)
+        # HACK: give time to do
+        time.sleep(.27)
 
     def stop(self):
         self._spawn.terminate()
