@@ -23,11 +23,8 @@ class JulaboMock:
         self._spawn = None
 
     def start(self):
-        # KISS
-        if self._spawn and not self._spawn.poll():
-            # is spawned and not pooling
-            self._log.info("Mock device server already instatiated, exiting...")
-            # TODO: if is_open, close - re-open
+        if self.is_started():
+            self._log.info("process already started!")
             return
         self._spawn = subprocess.Popen(self._cmd)
         # HACK: give time to do
@@ -35,11 +32,17 @@ class JulaboMock:
 
     def stop(self):
         self._spawn.terminate()
-        try:
-            self._spawn.wait(timeout=3)
-        except subprocess.TimeoutExpired:
-            kill(self._spawn.pid)
-        self._log.info("exiting...")
+        if self.is_started():
+            self._log.info("exiting...")
+            try:
+                self._spawn.wait(timeout=3)
+            except subprocess.TimeoutExpired:
+                kill(self._spawn.pid)
+
+    def is_started(self):
+        if self._spawn and not self._spawn.poll():
+            return True
+        return False
 
     def __enter__(self):
         self.start()
