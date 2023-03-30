@@ -19,24 +19,9 @@ class integrationTester(unittest.TestCase):
         self.fixture.stop()
         return super().tearDown()
 
-    def test_mock_temp(self):
-        # Arrange
-        # FIXME: debug mock running from root folder -> transit to direct call
-        fixture = {
-            "url"               : "tcp://localhost:5050",
-            "concurrency"       : "syncio",
-            "auto_reconnect"    : True
-        }
-        sut = julabo.JulaboCF(julabo.connection_for_url(**fixture))
-
-        # Act
-        result = sut.external_temperature()
-
-        # Assert
-        self.assertEqual(28.22, result)
-
     def test_mock_temp_min(self):
         # Arrange
+        # FIXME: debug mock running from root folder -> transit to direct call
         result = 0
         fixture = {
             "url"               : self._mock_url,
@@ -70,3 +55,14 @@ class integrationTester(unittest.TestCase):
             result = ext_temp.read_value()
         # Assert
         self.assertEqual(28.22, result)
+
+    def test_server_survives_device_offline(self):
+        # Arrange
+        self.fixture.stop()
+        with Server() as sut:
+            # Act
+            try:
+                sut.populate(".config/crystapp.xml", [".config/localhost.xml"])
+            # Assert
+            finally:
+                self.fixture.start()
