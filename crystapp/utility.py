@@ -1,5 +1,6 @@
 import logging
 import copy
+import psutil
 
 from socket import socket, AF_INET, SOCK_DGRAM
 from asyncua import uamethod
@@ -128,3 +129,10 @@ def import_xml_and_get_node(path:str, server) -> list[SyncNode]:
         idx = server._server.get_namespace_index(namespace)
         nodes.append(find_type_by_namespace_index(idx, server))
     return nodes
+
+def kill(proc_pid):
+    # https://stackoverflow.com/a/25134985/2475919
+    process = psutil.Process(proc_pid)
+    for proc in process.children(recursive=True):
+        proc.kill()
+    process.kill()

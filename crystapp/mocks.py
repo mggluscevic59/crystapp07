@@ -3,6 +3,7 @@ import subprocess
 import time
 
 from pathlib import Path
+from .utility import kill
 FMT = "%(asctime)-15s %(levelname)-5s %(name)s: %(message)s"
 
 class JulaboMock:
@@ -24,11 +25,14 @@ class JulaboMock:
             # cmd_string = " ".join(cmd_list)
             self._spawn = subprocess.Popen(cmd_list)
             # HACK: give time to do
-            time.sleep(1)
+            time.sleep(.25)
 
     def stop(self):
-        # FIXME: _warn("subprocess %s is still running" % self.pid
         self._spawn.terminate()
+        try:
+            self._spawn.wait(timeout=3)
+        except subprocess.TimeoutExpired:
+            kill(self._spawn.pid)
         self._log.info("exiting...")
 
     def __enter__(self):
