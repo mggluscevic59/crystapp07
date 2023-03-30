@@ -14,21 +14,20 @@ class JulaboMock:
 
     def start(self):
         if not self._spawn:
-            cmd_list = [ "source",
-                f"{self._env.absolute()}/bin/activate;",
-                "sinstruments-server",
+            cmd_list = [ f"{self._env.absolute()}/bin/python3.10",
+              f"{self._env.absolute()}/bin/sinstruments-server",
                 "-c",
                 str(self._cmd.absolute()),
                 "--log-level",
                 logging.getLevelName(self._log.getEffectiveLevel())
                 ]
-            cmd_string = " ".join(cmd_list)
-            # FIXME: _warn("subprocess %s is still running" % self.pid
-            self._spawn = subprocess.Popen([cmd_string], shell=True)
+            # cmd_string = " ".join(cmd_list)
+            self._spawn = subprocess.Popen(cmd_list)
             # HACK: give time to do
             time.sleep(1)
 
     def stop(self):
+        # FIXME: _warn("subprocess %s is still running" % self.pid
         self._spawn.terminate()
         self._log.info("exiting...")
 
