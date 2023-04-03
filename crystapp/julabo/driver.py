@@ -8,7 +8,7 @@ class Driver:
     def __init__(self, url) -> None:
         self._log = logging.getLogger(__name__)
         self._log.info("Initializing device driver")
-        self.methods:list[callable] = []
+        self.methods:list[callable] = {}
 
         # arguments => thread encapsulated asyncio, no connection open needed
         args = {
@@ -36,7 +36,7 @@ class Driver:
             "refs":ua.ObjectIds.HasComponent,
             "nodeclassmask":ua.NodeClass.Method
         }
-        children:list[SyncNode] = parent.get_children(methods_only)
+        children:list[SyncNode] = parent.get_children(**methods_only)
         for child in children:
             q_name = child.read_browse_name()
             method = self.methods[str(q_name.Name).lower()]
