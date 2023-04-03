@@ -56,8 +56,8 @@ class Server:
                 if not any(x in name for x in _excluded):
                     self._binded[name] = bound
 
-    def _populate_property(self, node, bindings):
-        pass
+    # def _populate_property(self, node, bindings):
+    #     pass
 
     def populate(self, types_path, devices_path:list):
         self._server.import_xml(types_path)
@@ -73,6 +73,6 @@ class Server:
         # FIXME: url from 'any' to 'urlBytes'{schema://hostname:port}
         self._connect_driver(last_namespace)
         # populate binder -> write props:all
-        write_props(self._binded, device)
+        write_props(self._binded, device, self._log)
         for node, method in match_methods(device, self._binded):
             self._server.link_method(node, binder(method))
