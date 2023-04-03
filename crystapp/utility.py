@@ -94,6 +94,7 @@ def binder(bound):
     return _method
 
 def match_methods(node:SyncNode, methods:dict[str, callable]):
+    """ Returns: child Node & matching method from methods dictionary """
     # get_methods not implemented for SyncNode
     arg = {"refs":ua.ObjectIds.HasComponent,"nodeclassmask":ua.NodeClass.Method}
     children:list[SyncNode] = node.get_children(**arg)

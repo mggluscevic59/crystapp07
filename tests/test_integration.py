@@ -66,3 +66,6 @@ class integrationTester(unittest.TestCase):
             # Assert
             finally:
                 self.fixture.start()
+
+    def test_semi_server(self):
+        pass
