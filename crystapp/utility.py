@@ -23,7 +23,11 @@ CFG = {
 ADDRESS_SPACE = {
     "server"    : "opc.tcp://localhost:4840",
     "client"    : "opc.tcp://localhost:4841",
-    "devices"   : ["tcp://localhost:5050"],
+    "devices"   : [
+        "tcp://localhost:5050",
+        "tcp://localhost:5051",
+        "tcp://localhost:5052",
+        ],
     "xml"       : ".config/crystapp.xml"
 }
 
@@ -155,3 +159,16 @@ def kill(proc_pid):
 def silence_loggers(loggers:list[logging.Logger]):
     for logger in loggers:
         logger.setLevel(logging.CRITICAL)
+
+def find_object_type(node_ids:list[ua.NodeId], server):
+    idx, name = 0, ""
+    types:SyncNode = server.nodes.types
+    baseObjectTypes = types.get_child(["0:ObjectTypes", "0:BaseObjectType"])
+    children:list[SyncNode] = baseObjectTypes.get_children()
+    for child in children:
+        node_id:ua.NodeId = child.nodeid
+        if child.nodeid in node_ids:
+            q_name = child.read_browse_name()
+            idx, name = int(node_id.NamespaceIndex), str(q_name.Name)
+            break
+    return idx, name
