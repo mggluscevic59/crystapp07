@@ -9,7 +9,7 @@ from asyncua.sync import ua, SyncNode
 # logging.getLogger(__name__)
 
 # devices configurtion
-cfg = {
+CFG = {
     "devices": [{
         "name": "jul-1",
         "class": "JulaboCF",
@@ -17,6 +17,14 @@ cfg = {
             {"type": "tcp", "url": "localhost:5050"}
         ]
     }]
+}
+
+# JSON test values
+ADDRESS_SPACE = {
+    "server"    : "opc.tcp://localhost:4840",
+    "client"    : "opc.tcp://localhost:4841",
+    "devices"   : ["tcp://localhost:5050"],
+    "xml"       : ".config/crystapp.xml"
 }
 
 # hostname, port
@@ -143,3 +151,7 @@ def kill(proc_pid):
     for proc in process.children(recursive=True):
         proc.kill()
     process.kill()
+
+def silence_loggers(loggers:list[logging.Logger]):
+    for logger in loggers:
+        logger.setLevel(logging.CRITICAL)
