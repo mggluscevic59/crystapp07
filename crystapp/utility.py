@@ -6,8 +6,6 @@ from socket import socket, AF_INET, SOCK_DGRAM
 from asyncua import uamethod
 from asyncua.sync import ua, SyncNode
 
-# logging.getLogger(__name__)
-
 # devices configurtion
 CFG = {
     "devices": [{
@@ -28,8 +26,11 @@ ADDRESS_SPACE = {
         "tcp://localhost:5051",
         "tcp://localhost:5052",
         ],
-    "xml"       : ".config/crystapp.xml"
+    "xml"       : ".config/server.xml"
 }
+
+# suggested logger format for mocks consistency with subprocess
+FMT = "%(asctime)-15s %(levelname)-5s %(name)s: %(message)s"
 
 # hostname, port
 def extract_socket_data(server):

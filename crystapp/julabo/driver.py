@@ -29,7 +29,7 @@ class Driver:
     def bind(self, parent:SyncNode):
         def binder(bound):
             @uamethod
-            def _method(parent:ua.NodeId, show:bool):
+            def _method(parent:ua.NodeId, *argv):
                 return bound()
             return _method
         methods_only = {

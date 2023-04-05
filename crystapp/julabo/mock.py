@@ -1,17 +1,19 @@
 import logging
-import subprocess
 import time
 
+from subprocess import Popen, TimeoutExpired
 from pathlib import Path
-from .utility import kill
-FMT = "%(asctime)-15s %(levelname)-5s %(name)s: %(message)s"
+from ..utility import kill
 
-class JulaboMock:
+class Mock:
     def __init__(self, environment, fixture) -> None:
         self._log = logging.getLogger(__name__)
+        self._spawn = None
         self._env = Path(environment)
         self._fxtr = Path(fixture)
-        self._cmd = [
+
+    def start(self):
+        cmd = [
             f"{self._env.absolute()}/bin/python3.10",
             f"{self._env.absolute()}/bin/sinstruments-server",
             "-c",
@@ -20,13 +22,10 @@ class JulaboMock:
             logging.getLevelName(self._log.getEffectiveLevel())
         ]
 
-        self._spawn = None
-
-    def start(self):
         if self.is_started():
             self._log.info("process already started!")
             return
-        self._spawn = subprocess.Popen(self._cmd)
+        self._spawn = Popen(cmd)
         # HACK: give time to do
         time.sleep(.27)
 
@@ -36,7 +35,7 @@ class JulaboMock:
             self._log.info("exiting...")
             try:
                 self._spawn.wait(timeout=3)
-            except subprocess.TimeoutExpired:
+            except TimeoutExpired:
                 kill(self._spawn.pid)
 
     def is_started(self):
