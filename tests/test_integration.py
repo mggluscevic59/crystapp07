@@ -1,68 +1,84 @@
 import unittest
-import julabo
-
-from crystapp.mocks import JulaboMock
-from crystapp.server import Server
+import crystapp
 
 class integrationTester(unittest.TestCase):
     def setUp(self) -> None:
-        self._env_path = ".venv"
-        self._mock_path = ".fixture.yml"
-        self._mock_url = "tcp://localhost:5050"
-
-        # virtual device server for everybody
-        self.fixture = JulaboMock(self._env_path,self._mock_path)
-        self.fixture.start()
+        self.fixtures = {
+            "environment"   : ".venv",
+            "configuration" : ".fixture.yml",
+            "url"           : "tcp://localhost:5050",
+            "baseObject"    : ".config/server.xml",
+        }
         return super().setUp()
-
-    def tearDown(self) -> None:
-        self.fixture.stop()
-        return super().tearDown()
 
     def test_mock_temp_min(self):
         # Arrange
-        # FIXME: debug mock running from root folder -> transit to direct call
-        result = 0
-        fixture = {
-            "url"               : self._mock_url,
-            "concurrency"       : "syncio",
-            "auto_reconnect"    : True
-        }
-        sut = julabo.JulaboCF(julabo.connection_for_url(**fixture))
-        # TODO: act with internal mock/device connection -> wrapper
+        sut = crystapp.Driver(self.fixtures["url"])
+        # NOTE: integration testing, socket involved
+        # NOTE: should test all decision branches
+        # BUG: individual tests should be independent (:5050 -> :0)
 
         # Act
-        result = sut.external_temperature()
+        with crystapp.julabo.Mock(self.fixtures["environment"], self.fixtures["configuration"]):
+            result = sut.methods["external_temperature"]()
 
         # Assert
         self.assertEqual(28.22, result)
 
     def test_server_temp_min(self):
         # Arrange
-        idx = []
-        result = None
-        with Server() as sut:
-            sut.populate(".config/crystapp.xml", [".config/localhost.xml"])
-            # TODO: optimise -> no hidden server access
-            idx.append(sut._server.get_namespace_index("tcp://localhost:5050"))
-            idx.append(sut._server.get_namespace_index("https://crystapc.fkit.hr/"))
-            objects = sut._server.nodes.objects
-            # FIXME: object & property have different namespace
-            index = [f"{idx[0]}:JulaboMagio_test", f"{idx[1]}:External_temperature"]
-            ext_temp = objects.get_child(index)
+        sut = crystapp.Server([self.fixtures["url"]])
+        node_list = sut.import_xml_and_populate_devices(self.fixtures["baseObject"])
+        device_idx = sut.get_namespace_index(self.fixtures["url"])
+        object_type_idx, name = crystapp.find_object_type(node_list, sut._server)
+        device = sut.objects.get_child(f"{device_idx}:{name}")
+        # TODO: optimise => no hidden server access; resistance to refactoring
 
-            # Act
-            result = ext_temp.read_value()
+        # Act
+        with crystapp.julabo.Mock(self.fixtures["environment"], self.fixtures["configuration"]):
+            with sut:
+                result = device.call_method(f"{object_type_idx}:External_temperature", 0)
+
         # Assert
         self.assertEqual(28.22, result)
 
-    def test_server_survives_device_offline(self):
+    def test_mock_is_stared(self):
         # Arrange
-        self.fixture.stop()
-        with Server() as sut:
-            # Act
-            try:
-                sut.populate(".config/crystapp.xml", [".config/localhost.xml"])
-            # Assert
-            finally:
-                self.fixture.start()
+        sut = crystapp.julabo.Mock(self.fixtures["environment"], self.fixtures["configuration"])
+
+        # Act
+        with sut:
+            result = sut.is_started()
+
+        # Assert
+        self.assertTrue(result)
+
+    def test_server_is_started_or_not(self):
+        # Arrange
+        fixture = crystapp.julabo.Mock(self.fixtures["environment"], self.fixtures["configuration"])
+        sut = crystapp.Server([self.fixtures["url"]])
+
+        # Act
+        with fixture:
+            with sut:
+                result = sut.is_started()
+
+        # Assert
+        self.assertTrue(result)
+
+        # Act
+        result = sut.is_started()
+
+        # Assert
+        self.assertFalse(result)
+
+    # def test_server_survives_device_offline(self):
+    #     # Arrange
+    #     self.fixture.stop()
+    #     with Server() as sut:
+    #         # Act
+    #         try:
+    #             sut.populate(".config/crystapp.xml", [".config/localhost.xml"])
+    #         # Assert
+    #         finally:
+    #             self.fixture.start()
