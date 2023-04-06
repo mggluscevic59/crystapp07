@@ -9,9 +9,6 @@ class integrationTester(unittest.TestCase):
             "url"           : "tcp://localhost:5050",
             "baseObject"    : ".config/server.xml",
         }
-        self._env_path = ".venv"
-        self._mock_path = ".fixture.yml"
-        self._mock_url = "tcp://localhost:5050"
         return super().setUp()
 
     def test_mock_temp_min(self):
@@ -45,9 +42,9 @@ class integrationTester(unittest.TestCase):
         # Assert
         self.assertEqual(28.22, result)
 
-    def test_is_stared(self):
+    def test_mock_is_stared(self):
         # Arrange
-        sut = crystapp.julabo.Mock(".venv",".fixture.yml")
+        sut = crystapp.julabo.Mock(self.fixtures["environment"], self.fixtures["configuration"])
 
         # Act
         with sut:
@@ -55,6 +52,25 @@ class integrationTester(unittest.TestCase):
 
         # Assert
         self.assertTrue(result)
+
+    def test_server_is_started_or_not(self):
+        # Arrange
+        fixture = crystapp.julabo.Mock(self.fixtures["environment"], self.fixtures["configuration"])
+        sut = crystapp.Server([self.fixtures["url"]])
+
+        # Act
+        with fixture:
+            with sut:
+                result = sut.is_started()
+
+        # Assert
+        self.assertTrue(result)
+
+        # Act
+        result = sut.is_started()
+
+        # Assert
+        self.assertFalse(result)
 
     # def test_server_survives_device_offline(self):
     #     # Arrange

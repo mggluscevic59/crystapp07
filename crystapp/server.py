@@ -35,7 +35,6 @@ class Server:
         self._populate(self._devices, object_type=object_type)
         return node_list
 
-    # FIXME: wrong node id type (numeric node id != node id)?
     def _filter_object_type(self, node_list:list[ua.NumericNodeId]) -> SyncNode:
         idx, name = find_object_type(node_list, self._server)
         index = [
@@ -56,12 +55,22 @@ class Server:
             for node, method in driver.bind(deviceObject):
                 self._server.link_method(node, method)
 
+    def __del__(self):
+        if self._server.tloop.is_alive():
+            # if looping, stop the loop
+            self._server.tloop.stop() 
+
     def __enter__(self):
         self.start()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.stop()
+
+    def is_started(self):
+        if self._server.aio_obj.bserver:
+            return self._server.aio_obj.bserver._server.is_serving()
+        return False
 
     def start(self):
         self._server.start()
