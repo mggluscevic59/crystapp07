@@ -1,5 +1,4 @@
 import unittest
-import julabo
 import crystapp
 
 class integrationTester(unittest.TestCase):
@@ -23,7 +22,7 @@ class integrationTester(unittest.TestCase):
         # BUG: individual tests should be independent (:5050 -> :0)
 
         # Act
-        with crystapp.Mock(self.fixtures["environment"], self.fixtures["configuration"]):
+        with crystapp.julabo.Mock(self.fixtures["environment"], self.fixtures["configuration"]):
             result = sut.methods["external_temperature"]()
 
         # Assert
@@ -39,12 +38,23 @@ class integrationTester(unittest.TestCase):
         # TODO: optimise => no hidden server access; resistance to refactoring
 
         # Act
-        with crystapp.Mock(self.fixtures["environment"], self.fixtures["configuration"]):
+        with crystapp.julabo.Mock(self.fixtures["environment"], self.fixtures["configuration"]):
             with sut:
                 result = device.call_method(f"{object_type_idx}:External_temperature", 0)
 
         # Assert
         self.assertEqual(28.22, result)
+
+    def test_is_stared(self):
+        # Arrange
+        sut = crystapp.julabo.Mock(".venv",".fixture.yml")
+
+        # Act
+        with sut:
+            result = sut.is_started()
+
+        # Assert
+        self.assertTrue(result)
 
     # def test_server_survives_device_offline(self):
     #     # Arrange
