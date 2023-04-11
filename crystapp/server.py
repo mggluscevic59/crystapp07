@@ -21,6 +21,9 @@ class Server:
         # nodes shortcuts
         self.types:SyncNode = self._server.nodes.types
         self.objects:SyncNode = self._server.nodes.objects
+        
+        # silences some alerts
+        self._server.set_security_policy([ua.SecurityPolicyType.NoSecurity])
 
     def set_endpoint(self, url):
         return self._server.set_endpoint(url=url)

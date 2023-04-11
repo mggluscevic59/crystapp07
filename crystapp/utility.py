@@ -12,7 +12,7 @@ CFG = {
         "name": "jul-1",
         "class": "JulaboCF",
         "transports": [
-            {"type": "tcp", "url": "localhost:5050"}
+            {"type": "tcp", "url": "localhost:0"}
         ]
     }]
 }
