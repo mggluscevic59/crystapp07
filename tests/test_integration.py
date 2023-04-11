@@ -1,13 +1,15 @@
 import unittest
 import crystapp
+import sinstruments.pytest
 
 from sinstruments.pytest import server_context
-from crystapp.utility import CFG
+from crystapp.utility import CFG as fixture
 
 class integrationTester(unittest.TestCase):
     def test_mock_temp_min(self):
         # Arrange
-        with server_context(CFG) as mock:
+        with server_context(fixture) as mock:
+            # NOTE: name known from fixture
             hostname, port = mock.devices["jul-1"].transports[0].address
             driver = crystapp.Driver(f"tcp://{hostname}:{port}")
             sut = driver.methods["external_temperature"]
@@ -21,7 +23,7 @@ class integrationTester(unittest.TestCase):
 
     def test_server_temp_min(self):
         # Arrange
-        with server_context(CFG) as mock:
+        with server_context(fixture) as mock:
             hostname, port = mock.devices["jul-1"].transports[0].address
             server = crystapp.Server([f"tcp://{hostname}:{port}"])
 
@@ -39,16 +41,31 @@ class integrationTester(unittest.TestCase):
         # Assert
         self.assertEqual(28.22, result)
 
-    # def test_mock_is_stared(self):
-    #     # Arrange
-    #     sut = crystapp.julabo.Mock(self.fixtures["environment"], self.fixtures["configuration"])
+    def test_mock_is_stared(self):
+        # Arrange
+        sut = server_context(fixture)
 
-    #     # Act
-    #     with sut:
-    #         result = sut.is_started()
+        # Act
+        result = self.server_started_helper(sut)
 
-    #     # Assert
-    #     self.assertTrue(result)
+        # Assert
+        self.assertFalse(result)
+
+        # Arrange
+        with sut as mock:
+            # Act
+            result = self.server_started_helper(mock)
+
+        # Assert
+        self.assertTrue(result)
+
+    def server_started_helper(self, server:sinstruments.pytest.server):
+        try:
+            server.devices.items()
+            return True
+        except AttributeError:
+            # HACK: no name, no fame
+            return False
 
     # def test_server_is_started_or_not(self):
     #     # Arrange
