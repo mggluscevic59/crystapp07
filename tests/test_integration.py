@@ -43,6 +43,7 @@ class integrationTester(unittest.TestCase):
 
     def test_mock_is_stared(self):
         # Arrange
+        # FIXME: server context != server
         sut = server_context(fixture)
 
         # Act
@@ -67,32 +68,42 @@ class integrationTester(unittest.TestCase):
             # HACK: no name, no fame
             return False
 
-    # def test_server_is_started_or_not(self):
-    #     # Arrange
-    #     fixture = crystapp.julabo.Mock(self.fixtures["environment"], self.fixtures["configuration"])
-    #     sut = crystapp.Server([self.fixtures["url"]])
+    def test_server_is_started_or_not(self):
+        # Arrange
+        with server_context(fixture) as mock:
+            hostname, port = mock.devices["jul-1"].transports[0].address
+            sut = crystapp.Server([f"tcp://{hostname}:{port}"])
 
-    #     # Act
-    #     with fixture:
-    #         with sut:
-    #             result = sut.is_started()
+            # Act
+            with sut:
+                result = sut.is_started()
 
-    #     # Assert
-    #     self.assertTrue(result)
+        # Assert
+        self.assertTrue(result)
 
-    #     # Act
-    #     result = sut.is_started()
+        # Act
+        result = sut.is_started()
 
-    #     # Assert
-    #     self.assertFalse(result)
+        # Assert
+        self.assertFalse(result)
 
-    # def test_server_survives_device_offline(self):
-    #     # Arrange
-    #     self.fixture.stop()
-    #     with Server() as sut:
-    #         # Act
-    #         try:
-    #             sut.populate(".config/crystapp.xml", [".config/localhost.xml"])
-    #         # Assert
-    #         finally:
-    #             self.fixture.start()
+    def test_server_survives_device_offline(self):
+        # Arrange
+        hostname, port = "", 0
+        with server_context(fixture) as mock:
+            hostname, port = mock.devices["jul-1"].transports[0].address
+        # context = server_context(fixture)
+        # mock = context.start()
+        # hostname, port = mock.devices["jul-1"].transports[0].address
+        # context.stop()
+        with crystapp.Server([f"tcp://{hostname}:{port}"]) as sut:
+            # Act
+            try:
+                sut.import_xml_and_populate_devices(".config/server.xml")
+            # Assert
+            finally:
+                # no errors => test passed
+                pass
+
+    def test_node_manager_survives_device_offline(self):
+        pass
