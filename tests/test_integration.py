@@ -1,53 +1,49 @@
 import unittest
 import crystapp
 
+from crystapp.utility import CFG as fixture
+
 class integrationTester(unittest.TestCase):
-    def setUp(self) -> None:
-        self.fixtures = {
-            "environment"   : ".venv",
-            "configuration" : ".fixture.yml",
-            "url"           : "tcp://localhost:5050",
-            "baseObject"    : ".config/server.xml",
-        }
-        return super().setUp()
-
-    def test_mock_temp_min(self):
+    def test_mock_vs_driver_communication_on_tp_100_access(self):
         # Arrange
-        sut = crystapp.Driver(self.fixtures["url"])
-        # NOTE: integration testing, socket involved
-        # NOTE: should test all decision branches
-        # BUG: individual tests should be independent (:5050 -> :0)
+        with crystapp.julabo.Mock(fixture) as mock:
+            # FIXME: name known from fixture; protection against regression?
+            hostname, port = mock.endpoint.hostname, mock.endpoint.port
+            driver = crystapp.Driver(f"tcp://{hostname}:{port}")
+            sut = driver.methods["external_temperature"]
+            # TODO: should test all decision branches
 
-        # Act
-        with crystapp.julabo.Mock(self.fixtures["environment"], self.fixtures["configuration"]):
-            result = sut.methods["external_temperature"]()
+            # Act
+            result = sut()
 
         # Assert
         self.assertEqual(28.22, result)
 
-    def test_server_temp_min(self):
+    def test_server_vs_mock_communication_on_tp_100_access(self):
         # Arrange
-        sut = crystapp.Server([self.fixtures["url"]])
-        node_list = sut.import_xml_and_populate_devices(self.fixtures["baseObject"])
-        device_idx = sut.get_namespace_index(self.fixtures["url"])
-        object_type_idx, name = crystapp.find_object_type(node_list, sut._server)
-        device = sut.objects.get_child(f"{device_idx}:{name}")
-        # TODO: optimise => no hidden server access; resistance to refactoring
+        with crystapp.julabo.Mock(fixture) as mock:
+            # FIXME: keep it DRY?
+            hostname, port = mock.endpoint.hostname, mock.endpoint.port
+            server = crystapp.Server([f"tcp://{hostname}:{port}"])
 
-        # Act
-        with crystapp.julabo.Mock(self.fixtures["environment"], self.fixtures["configuration"]):
-            with sut:
-                result = device.call_method(f"{object_type_idx}:External_temperature", 0)
+            nodes = server.import_xml_and_populate_devices(".config/server.xml")
+            device_idx = server.get_namespace_index(f"tcp://{hostname}:{port}")
+            # FIXME: optimise => no hidden server access; resistance to refactoring
+            type_idx, name = crystapp.find_object_type(nodes, server._server)
+            sut = server.objects.get_child(f"{device_idx}:{name}")
+
+            # Act
+            with server:
+                # TODO: optimise => server as mock, not real for taking too long
+                result = sut.call_method(f"{type_idx}:External_temperature", 0)
 
         # Assert
         self.assertEqual(28.22, result)
 
     def test_mock_is_stared(self):
         # Arrange
-        sut = crystapp.julabo.Mock(self.fixtures["environment"], self.fixtures["configuration"])
-
-        # Act
-        with sut:
+        with crystapp.julabo.Mock(fixture) as sut:
+            # Act
             result = sut.is_started()
 
         # Assert
@@ -55,11 +51,11 @@ class integrationTester(unittest.TestCase):
 
     def test_server_is_started_or_not(self):
         # Arrange
-        fixture = crystapp.julabo.Mock(self.fixtures["environment"], self.fixtures["configuration"])
-        sut = crystapp.Server([self.fixtures["url"]])
+        with crystapp.julabo.Mock(fixture) as mock:
+            hostname, port = mock.endpoint.hostname, mock.endpoint.port
+            sut = crystapp.Server([f"tcp://{hostname}:{port}"])
 
-        # Act
-        with fixture:
+            # Act
             with sut:
                 result = sut.is_started()
 
@@ -72,13 +68,37 @@ class integrationTester(unittest.TestCase):
         # Assert
         self.assertFalse(result)
 
-    # def test_server_survives_device_offline(self):
+    def test_server_survives_device_offline(self):
+        # Arrange
+        hostname, port = "", 0
+        with crystapp.julabo.Mock(fixture) as mock:
+            hostname, port = mock.endpoint.hostname, mock.endpoint.port
+        with crystapp.Server([f"tcp://{hostname}:{port}"]) as sut:
+            # Act
+            try:
+                sut.import_xml_and_populate_devices(".config/server.xml")
+            # Assert
+            finally:
+                # NOTE: no errors => test passed
+                pass
+
+    # TODO: implement test node management
+    # def test_node_manager_survives_device_offline(self):
     #     # Arrange
-    #     self.fixture.stop()
-    #     with Server() as sut:
-    #         # Act
-    #         try:
-    #             sut.populate(".config/crystapp.xml", [".config/localhost.xml"])
-    #         # Assert
-    #         finally:
-    #             self.fixture.start()
+    #     hostname, port = "", 0
+    #     with crystapp.julabo.Mock(fixture) as mock:
+    #         hostname, port = mock.devices["jul-1"].transports[0].address
+    #     server = crystapp.Server([f"tcp://{hostname}:{port}"])
+
+    #     nodes = server.import_xml_and_populate_devices(".config/server.xml")
+    #     device_idx = server.get_namespace_index(f"tcp://{hostname}:{port}")
+    #     type_idx, name = crystapp.find_object_type(nodes, server._server)
+    #     sut = server.objects.get_child(f"{device_idx}:{name}")
+
+    #     # Act
+    #     with server:
+    #         result = sut.call_method(f"{type_idx}:External_temperature", 0)
+
+    #     # Assert
+    #     # no errors => test passed
+    #     pass

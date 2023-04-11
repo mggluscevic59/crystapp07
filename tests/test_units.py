@@ -1,10 +1,12 @@
 import unittest
 import crystapp
 
+from crystapp.utility import CFG as fixture
+
 class UnitTest(unittest.TestCase):
     def test_mock_not_started(self):
         # Arrange
-        sut = crystapp.julabo.Mock(".venv",".fixture.yml")
+        sut = crystapp.julabo.Mock(fixture)
 
         # Act
         result = sut.is_started()
