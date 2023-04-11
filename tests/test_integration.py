@@ -92,10 +92,6 @@ class integrationTester(unittest.TestCase):
         hostname, port = "", 0
         with server_context(fixture) as mock:
             hostname, port = mock.devices["jul-1"].transports[0].address
-        # context = server_context(fixture)
-        # mock = context.start()
-        # hostname, port = mock.devices["jul-1"].transports[0].address
-        # context.stop()
         with crystapp.Server([f"tcp://{hostname}:{port}"]) as sut:
             # Act
             try:
@@ -105,5 +101,24 @@ class integrationTester(unittest.TestCase):
                 # no errors => test passed
                 pass
 
-    def test_node_manager_survives_device_offline(self):
-        pass
+    # def test_node_manager_survives_device_offline(self):
+    #     # Arrange
+    #     hostname, port = "", 0
+    #     with server_context(fixture) as mock:
+    #         hostname, port = mock.devices["jul-1"].transports[0].address
+    #     server = crystapp.Server([f"tcp://{hostname}:{port}"])
+
+    #     nodes = server.import_xml_and_populate_devices(".config/server.xml")
+    #     device_idx = server.get_namespace_index(f"tcp://{hostname}:{port}")
+    #     # FIXME: optimise => no hidden server access; resistance to refactoring
+    #     type_idx, name = crystapp.find_object_type(nodes, server._server)
+    #     sut = server.objects.get_child(f"{device_idx}:{name}")
+
+    #     # Act
+    #     with server:
+    #         # TODO: optimise => server as mock, not real for taking too long
+    #         result = sut.call_method(f"{type_idx}:External_temperature", 0)
+
+    #     # Assert
+    #     # no errors => test passed
+    #     pass
