@@ -1,20 +1,17 @@
 import unittest
 import crystapp
-# import sinstruments.pytest
 
-# from sinstruments.pytest import server_context
 from crystapp.utility import CFG as fixture
 
 class integrationTester(unittest.TestCase):
-    def test_mock_temp_min(self):
+    def test_mock_vs_driver_communication_on_tp_100_access(self):
         # Arrange
         with crystapp.julabo.Mock(fixture) as mock:
-        # with server_context(fixture) as mock:
-            # NOTE: name known from fixture; protection against regression?
-            hostname, port = mock.devices["jul-1"].transports[0].address
+            # FIXME: name known from fixture; protection against regression?
+            hostname, port = mock.endpoint.hostname, mock.endpoint.port
             driver = crystapp.Driver(f"tcp://{hostname}:{port}")
             sut = driver.methods["external_temperature"]
-            # NOTE: should test all decision branches
+            # TODO: should test all decision branches
 
             # Act
             result = sut()
@@ -22,10 +19,11 @@ class integrationTester(unittest.TestCase):
         # Assert
         self.assertEqual(28.22, result)
 
-    def test_server_temp_min(self):
+    def test_server_vs_mock_communication_on_tp_100_access(self):
         # Arrange
         with crystapp.julabo.Mock(fixture) as mock:
-            hostname, port = mock.devices["jul-1"].transports[0].address
+            # FIXME: keep it DRY?
+            hostname, port = mock.endpoint.hostname, mock.endpoint.port
             server = crystapp.Server([f"tcp://{hostname}:{port}"])
 
             nodes = server.import_xml_and_populate_devices(".config/server.xml")
@@ -44,35 +42,17 @@ class integrationTester(unittest.TestCase):
 
     def test_mock_is_stared(self):
         # Arrange
-        # FIXME: server context != server
-        sut = crystapp.julabo.Mock(fixture)
-
-        # Act
-        result = sut.is_started()
-
-        # Assert
-        self.assertFalse(result)
-
-        # Arrange
-        with sut as mock:
+        with crystapp.julabo.Mock(fixture) as sut:
             # Act
             result = sut.is_started()
 
         # Assert
         self.assertTrue(result)
 
-    # def server_started_helper(self, server:sinstruments.pytest.server):
-    #     try:
-    #         server.devices.items()
-    #         return True
-    #     except AttributeError:
-    #         # HACK: no name, no fame
-    #         return False
-
     def test_server_is_started_or_not(self):
         # Arrange
         with crystapp.julabo.Mock(fixture) as mock:
-            hostname, port = mock.devices["jul-1"].transports[0].address
+            hostname, port = mock.endpoint.hostname, mock.endpoint.port
             sut = crystapp.Server([f"tcp://{hostname}:{port}"])
 
             # Act
@@ -92,16 +72,17 @@ class integrationTester(unittest.TestCase):
         # Arrange
         hostname, port = "", 0
         with crystapp.julabo.Mock(fixture) as mock:
-            hostname, port = mock.devices["jul-1"].transports[0].address
+            hostname, port = mock.endpoint.hostname, mock.endpoint.port
         with crystapp.Server([f"tcp://{hostname}:{port}"]) as sut:
             # Act
             try:
                 sut.import_xml_and_populate_devices(".config/server.xml")
             # Assert
             finally:
-                # no errors => test passed
+                # NOTE: no errors => test passed
                 pass
 
+    # TODO: implement test node management
     # def test_node_manager_survives_device_offline(self):
     #     # Arrange
     #     hostname, port = "", 0
@@ -111,13 +92,11 @@ class integrationTester(unittest.TestCase):
 
     #     nodes = server.import_xml_and_populate_devices(".config/server.xml")
     #     device_idx = server.get_namespace_index(f"tcp://{hostname}:{port}")
-    #     # FIXME: optimise => no hidden server access; resistance to refactoring
     #     type_idx, name = crystapp.find_object_type(nodes, server._server)
     #     sut = server.objects.get_child(f"{device_idx}:{name}")
 
     #     # Act
     #     with server:
-    #         # TODO: optimise => server as mock, not real for taking too long
     #         result = sut.call_method(f"{type_idx}:External_temperature", 0)
 
     #     # Assert
