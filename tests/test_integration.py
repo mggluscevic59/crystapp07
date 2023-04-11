@@ -1,15 +1,16 @@
 import unittest
 import crystapp
-import sinstruments.pytest
+# import sinstruments.pytest
 
-from sinstruments.pytest import server_context
+# from sinstruments.pytest import server_context
 from crystapp.utility import CFG as fixture
 
 class integrationTester(unittest.TestCase):
     def test_mock_temp_min(self):
         # Arrange
-        with server_context(fixture) as mock:
-            # NOTE: name known from fixture
+        with crystapp.julabo.Mock(fixture) as mock:
+        # with server_context(fixture) as mock:
+            # NOTE: name known from fixture; protection against regression?
             hostname, port = mock.devices["jul-1"].transports[0].address
             driver = crystapp.Driver(f"tcp://{hostname}:{port}")
             sut = driver.methods["external_temperature"]
@@ -23,7 +24,7 @@ class integrationTester(unittest.TestCase):
 
     def test_server_temp_min(self):
         # Arrange
-        with server_context(fixture) as mock:
+        with crystapp.julabo.Mock(fixture) as mock:
             hostname, port = mock.devices["jul-1"].transports[0].address
             server = crystapp.Server([f"tcp://{hostname}:{port}"])
 
@@ -44,10 +45,10 @@ class integrationTester(unittest.TestCase):
     def test_mock_is_stared(self):
         # Arrange
         # FIXME: server context != server
-        sut = server_context(fixture)
+        sut = crystapp.julabo.Mock(fixture)
 
         # Act
-        result = self.server_started_helper(sut)
+        result = sut.is_started()
 
         # Assert
         self.assertFalse(result)
@@ -55,22 +56,22 @@ class integrationTester(unittest.TestCase):
         # Arrange
         with sut as mock:
             # Act
-            result = self.server_started_helper(mock)
+            result = sut.is_started()
 
         # Assert
         self.assertTrue(result)
 
-    def server_started_helper(self, server:sinstruments.pytest.server):
-        try:
-            server.devices.items()
-            return True
-        except AttributeError:
-            # HACK: no name, no fame
-            return False
+    # def server_started_helper(self, server:sinstruments.pytest.server):
+    #     try:
+    #         server.devices.items()
+    #         return True
+    #     except AttributeError:
+    #         # HACK: no name, no fame
+    #         return False
 
     def test_server_is_started_or_not(self):
         # Arrange
-        with server_context(fixture) as mock:
+        with crystapp.julabo.Mock(fixture) as mock:
             hostname, port = mock.devices["jul-1"].transports[0].address
             sut = crystapp.Server([f"tcp://{hostname}:{port}"])
 
@@ -90,7 +91,7 @@ class integrationTester(unittest.TestCase):
     def test_server_survives_device_offline(self):
         # Arrange
         hostname, port = "", 0
-        with server_context(fixture) as mock:
+        with crystapp.julabo.Mock(fixture) as mock:
             hostname, port = mock.devices["jul-1"].transports[0].address
         with crystapp.Server([f"tcp://{hostname}:{port}"]) as sut:
             # Act
@@ -104,7 +105,7 @@ class integrationTester(unittest.TestCase):
     # def test_node_manager_survives_device_offline(self):
     #     # Arrange
     #     hostname, port = "", 0
-    #     with server_context(fixture) as mock:
+    #     with crystapp.julabo.Mock(fixture) as mock:
     #         hostname, port = mock.devices["jul-1"].transports[0].address
     #     server = crystapp.Server([f"tcp://{hostname}:{port}"])
 
