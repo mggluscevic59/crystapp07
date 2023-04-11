@@ -13,14 +13,16 @@ class integrationTester(unittest.TestCase):
 
     def test_mock_temp_min(self):
         # Arrange
-        sut = crystapp.Driver(self.fixtures["url"])
+        driver = crystapp.Driver(self.fixtures["url"])
+        sut = driver.methods["external_temperature"]
+        mock = crystapp.julabo.Mock(".venv", ".fixture.yml")
         # NOTE: integration testing, socket involved
         # NOTE: should test all decision branches
         # BUG: individual tests should be independent (:5050 -> :0)
 
         # Act
-        with crystapp.julabo.Mock(self.fixtures["environment"], self.fixtures["configuration"]):
-            result = sut.methods["external_temperature"]()
+        with mock:
+            result = sut()
 
         # Assert
         self.assertEqual(28.22, result)
