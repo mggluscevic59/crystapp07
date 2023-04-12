@@ -2,6 +2,7 @@ import logging
 
 from urllib.parse import urlparse
 from sinstruments.pytest import server_context
+from ..utility import kill
 
 class Mock:
     def __init__(self, configuration) -> None:
@@ -32,6 +33,10 @@ class Mock:
         if self._spawn.thread is not None and self._spawn.thread.is_alive():
             return True
         return False
+
+    def __del__(self):
+        if self.is_started():
+            kill(self._spawn.thread.native_id)
 
     def __enter__(self):
         self.start()

@@ -10,9 +10,9 @@ class integrationTester(unittest.TestCase):
         mock = crystapp.julabo.Mock(fixture)
         sut = None
 
-
         # Act
         with mock:
+            print(mock.endpoint.geturl())
             sut = crystapp.Driver(mock.endpoint.geturl())
             result = sut.methods["external_temperature"]()
 
@@ -34,6 +34,7 @@ class integrationTester(unittest.TestCase):
 
             # Act
             with server:
+                print(mock.endpoint.geturl(), server.endpoint.geturl())
                 # TODO: optimise => server as mock, not real for taking too long
                 result = sut.call_method(f"{type_idx}:External_temperature", 0)
 
@@ -43,6 +44,7 @@ class integrationTester(unittest.TestCase):
     def test_mock_is_stared(self):
         # Arrange
         with crystapp.julabo.Mock(fixture) as sut:
+            print(sut.endpoint.geturl())
             # Act
             result = sut.is_started()
 
@@ -52,11 +54,12 @@ class integrationTester(unittest.TestCase):
     def test_server_is_started_or_not(self):
         # Arrange
         with crystapp.julabo.Mock(fixture) as mock:
-            hostname, port = mock.endpoint.hostname, mock.endpoint.port
-            sut = crystapp.Server([f"tcp://{hostname}:{port}"])
+            sut = crystapp.Server([mock.endpoint.geturl()])
+            sut.disable_clock()
 
             # Act
             with sut:
+                print(mock.endpoint.geturl(), sut.endpoint.geturl())
                 result = sut.is_started()
 
         # Assert
@@ -70,10 +73,11 @@ class integrationTester(unittest.TestCase):
 
     def test_server_survives_device_offline(self):
         # Arrange
-        hostname, port = "", 0
         with crystapp.julabo.Mock(fixture) as mock:
-            hostname, port = mock.endpoint.hostname, mock.endpoint.port
-        with crystapp.Server([f"tcp://{hostname}:{port}"]) as sut:
+            pass
+        with crystapp.Server([mock.endpoint.geturl()]) as sut:
+            sut.disable_clock()
+            print(mock.endpoint.geturl(), sut.endpoint.geturl())
             # Act
             try:
                 sut.import_xml_and_populate_devices(".config/server.xml")

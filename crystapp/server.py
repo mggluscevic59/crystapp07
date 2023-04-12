@@ -1,6 +1,7 @@
 import logging
 import asyncua.sync
 
+from urllib.parse import urlparse
 from asyncua.sync import SyncNode, ua
 from .julabo.driver import Driver
 from .utility import silence_loggers, find_object_type
@@ -24,15 +25,26 @@ class Server:
         # nodes shortcuts
         self.types:SyncNode = self._server.nodes.types
         self.objects:SyncNode = self._server.nodes.objects
-        
+
         # silences some alerts
         self._server.set_security_policy([ua.SecurityPolicyType.NoSecurity])
+        self._server.set_endpoint("opc.tcp://localhost:0/freeopcua/server/")
+
+    @property
+    def endpoint(self):
+        if self._server.aio_obj.bserver:
+            bserver = self._server.aio_obj.bserver
+            hostname, port = bserver.hostname, bserver.port
+            url = urlparse(f"opc.tcp://{hostname}:{port}")
+            return url
+        return self._server.aio_obj.endpoint
+
+    @endpoint.setter
+    def endpoint(self, value):
+        return self._server.set_endpoint(url=value)
 
     def disable_clock(self):
         self._server.disable_clock()
-
-    def set_endpoint(self, url):
-        return self._server.set_endpoint(url=url)
 
     def get_namespace_index(self, url:str):
         return self._server.get_namespace_index(url)
