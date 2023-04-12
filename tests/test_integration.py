@@ -6,15 +6,15 @@ from crystapp.utility import CFG as fixture
 class integrationTester(unittest.TestCase):
     def test_mock_vs_driver_communication_on_tp_100_access(self):
         # Arrange
-        with crystapp.julabo.Mock(fixture) as mock:
-            # FIXME: name known from fixture; protection against regression?
-            hostname, port = mock.endpoint.hostname, mock.endpoint.port
-            driver = crystapp.Driver(f"tcp://{hostname}:{port}")
-            sut = driver.methods["external_temperature"]
-            # TODO: should test all decision branches
+        fixture = crystapp.utility.CFG
+        mock = crystapp.julabo.Mock(fixture)
+        sut = None
 
-            # Act
-            result = sut()
+
+        # Act
+        with mock:
+            sut = crystapp.Driver(mock.endpoint.geturl())
+            result = sut.methods["external_temperature"]()
 
         # Assert
         self.assertEqual(28.22, result)
