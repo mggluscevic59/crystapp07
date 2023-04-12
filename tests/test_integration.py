@@ -21,15 +21,15 @@ class integrationTester(unittest.TestCase):
 
     def test_server_vs_mock_communication_on_tp_100_access(self):
         # Arrange
+        fixture = crystapp.utility.CFG
         with crystapp.julabo.Mock(fixture) as mock:
-            # FIXME: keep it DRY?
-            hostname, port = mock.endpoint.hostname, mock.endpoint.port
-            server = crystapp.Server([f"tcp://{hostname}:{port}"])
+            server = crystapp.Server([mock.endpoint.geturl()])
+            server.disable_clock()
 
             nodes = server.import_xml_and_populate_devices(".config/server.xml")
-            device_idx = server.get_namespace_index(f"tcp://{hostname}:{port}")
-            # FIXME: optimise => no hidden server access; resistance to refactoring
-            type_idx, name = crystapp.find_object_type(nodes, server._server)
+            device_idx = server.get_namespace_index(mock.endpoint.geturl())
+            type_idx, name = crystapp.find_object_type(nodes, server.types)
+
             sut = server.objects.get_child(f"{device_idx}:{name}")
 
             # Act

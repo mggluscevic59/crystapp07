@@ -17,13 +17,19 @@ class Server:
     def __init__(self, devices:list[str]) -> None:
         self._log = logging.getLogger(__name__)
         self._server = asyncua.sync.Server()
-        self._devices = devices
+        if isinstance(devices, list):
+            self._devices = devices
+        else:
+            raise TypeError("Server accepts list of devices as initialisation")
         # nodes shortcuts
         self.types:SyncNode = self._server.nodes.types
         self.objects:SyncNode = self._server.nodes.objects
         
         # silences some alerts
         self._server.set_security_policy([ua.SecurityPolicyType.NoSecurity])
+
+    def disable_clock(self):
+        self._server.disable_clock()
 
     def set_endpoint(self, url):
         return self._server.set_endpoint(url=url)
@@ -39,7 +45,7 @@ class Server:
         return node_list
 
     def _filter_object_type(self, node_list:list[ua.NumericNodeId]) -> SyncNode:
-        idx, name = find_object_type(node_list, self._server)
+        idx, name = find_object_type(node_list, self.types)
         index = [
             "0:ObjectTypes",
             "0:BaseObjectType",
