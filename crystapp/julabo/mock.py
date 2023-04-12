@@ -33,6 +33,10 @@ class Mock:
             return True
         return False
 
+    def __del__(self):
+        if self.is_started():
+            self._spawn.join()
+
     def __enter__(self):
         self.start()
         return self

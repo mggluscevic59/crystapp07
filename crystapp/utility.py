@@ -161,9 +161,8 @@ def silence_loggers(loggers:list[logging.Logger]):
     for logger in loggers:
         logger.setLevel(logging.CRITICAL)
 
-def find_object_type(node_ids:list[ua.NodeId], server):
+def find_object_type(node_ids:list[ua.NodeId], types:SyncNode):
     idx, name = 0, ""
-    types:SyncNode = server.nodes.types
     baseObjectTypes = types.get_child(["0:ObjectTypes", "0:BaseObjectType"])
     children:list[SyncNode] = baseObjectTypes.get_children()
     for child in children:
