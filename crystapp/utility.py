@@ -1,6 +1,7 @@
 import logging
 import copy
 import psutil
+import asyncua.sync
 
 from socket import socket, AF_INET, SOCK_DGRAM
 from asyncua import uamethod
@@ -172,3 +173,23 @@ def find_object_type(node_ids:list[ua.NodeId], types:SyncNode):
             idx, name = int(node_id.NamespaceIndex), str(q_name.Name)
             break
     return idx, name
+
+def call_method_on_actual_node(node:SyncNode):
+    parent:SyncNode = node.get_parent()
+    return parent.call_method(node)
+
+def get_children_indexed_by_identifier(parent:SyncNode) -> dict[str, SyncNode]:
+    result = {}
+    children:list[SyncNode] = parent.get_children()
+    for child in children:
+        result[str(child)] = child
+    return result
+
+def update_props(parent:SyncNode, client:asyncua.sync.Client):
+    dictionary = get_children_indexed_by_identifier(parent)
+    for nodeid, serv_child in dictionary.items():
+        cli_child:SyncNode = client.get_node(nodeid)
+        value = call_method_on_actual_node(cli_child)
+        old_value = serv_child.read_value()
+        if value != old_value:
+            serv_child.write_value(value)
