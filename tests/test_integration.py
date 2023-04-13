@@ -36,7 +36,8 @@ class integrationTester(unittest.TestCase):
             with server:
                 print(mock.endpoint.geturl(), server.endpoint.geturl())
                 # TODO: optimise => server as mock, not real for taking too long
-                result = sut.call_method(f"{type_idx}:External_temperature", 0)
+                # result = sut.call_method(f"{type_idx}:External_temperature", 0)
+                result = sut.call_method(f"{type_idx}:External_temperature")
 
         # Assert
         self.assertEqual(28.22, result)
