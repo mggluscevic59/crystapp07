@@ -36,7 +36,8 @@ class integrationTester(unittest.TestCase):
             with server:
                 print(mock.endpoint.geturl(), server.endpoint.geturl())
                 # TODO: optimise => server as mock, not real for taking too long
-                result = sut.call_method(f"{type_idx}:External_temperature", 0)
+                # result = sut.call_method(f"{type_idx}:External_temperature", 0)
+                result = sut.call_method(f"{type_idx}:External_temperature")
 
         # Assert
         self.assertEqual(28.22, result)
@@ -87,22 +88,23 @@ class integrationTester(unittest.TestCase):
                 pass
 
     # TODO: implement test node management
-    # def test_node_manager_survives_device_offline(self):
-    #     # Arrange
-    #     hostname, port = "", 0
-    #     with crystapp.julabo.Mock(fixture) as mock:
-    #         hostname, port = mock.devices["jul-1"].transports[0].address
-    #     server = crystapp.Server([f"tcp://{hostname}:{port}"])
+    def test_node_manager_survives_device_offline(self):
+        # Arrange
+        with crystapp.julabo.Mock(fixture) as mock:
+            pass
+        server = crystapp.Server([mock.endpoint.geturl()])
 
-    #     nodes = server.import_xml_and_populate_devices(".config/server.xml")
-    #     device_idx = server.get_namespace_index(f"tcp://{hostname}:{port}")
-    #     type_idx, name = crystapp.find_object_type(nodes, server._server)
-    #     sut = server.objects.get_child(f"{device_idx}:{name}")
+        nodes = server.import_xml_and_populate_devices(".config/server.xml")
+        device_idx = server.get_namespace_index(mock.endpoint.geturl())
+        type_idx, name = crystapp.find_object_type(nodes, server.types)
+        sut = server.objects.get_child(f"{device_idx}:{name}")
 
-    #     # Act
-    #     with server:
-    #         result = sut.call_method(f"{type_idx}:External_temperature", 0)
-
-    #     # Assert
-    #     # no errors => test passed
-    #     pass
+        # Act
+        try:
+            with server:
+                sut.call_method(f"{type_idx}:External_temperature")
+                print(mock.endpoint.geturl(), sut.endpoint.geturl())
+        # Assert
+        finally:
+            # NOTE: no errors => test passed
+            pass
