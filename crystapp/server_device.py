@@ -14,21 +14,21 @@ banned_loggers = [
     ]
 silence_loggers([logging.getLogger(x) for x in banned_loggers])
 
-class Server:
+class DeviceServer:
     def __init__(self, devices:list[str]) -> None:
         self._log = logging.getLogger(__name__)
         self._server = asyncua.sync.Server()
+        # nodes shortcuts
+        self.types:SyncNode = self._server.nodes.types
+        self.objects:SyncNode = self._server.nodes.objects
+        # silences some alerts
+        self._server.set_security_policy([ua.SecurityPolicyType.NoSecurity])
+        self._server.set_endpoint("opc.tcp://localhost:0/freeopcua/server/")
+
         if isinstance(devices, list):
             self._devices = devices
         else:
             raise TypeError("Server accepts list of devices as initialisation")
-        # nodes shortcuts
-        self.types:SyncNode = self._server.nodes.types
-        self.objects:SyncNode = self._server.nodes.objects
-
-        # silences some alerts
-        self._server.set_security_policy([ua.SecurityPolicyType.NoSecurity])
-        self._server.set_endpoint("opc.tcp://localhost:0/freeopcua/server/")
 
     @property
     def endpoint(self):
