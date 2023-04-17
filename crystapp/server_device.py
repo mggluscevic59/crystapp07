@@ -1,10 +1,11 @@
 import logging
-import asyncua.sync
+# import asyncua.sync
 
-from urllib.parse import urlparse
+# from urllib.parse import urlparse
 from asyncua.sync import SyncNode, ua
 from .julabo.driver import Driver
 from .utility import silence_loggers, find_object_type
+from .server_base import baseServer
 
 # logging level: critical for noisy loggers
 banned_loggers = [
@@ -14,10 +15,9 @@ banned_loggers = [
     ]
 silence_loggers([logging.getLogger(x) for x in banned_loggers])
 
-class DeviceServer:
+class DeviceServer(baseServer):
     def __init__(self, devices:list[str]) -> None:
-        self._log = logging.getLogger(__name__)
-        self._server = asyncua.sync.Server()
+        super().__init__()
         # nodes shortcuts
         self.types:SyncNode = self._server.nodes.types
         self.objects:SyncNode = self._server.nodes.objects
@@ -25,29 +25,11 @@ class DeviceServer:
         self._server.set_security_policy([ua.SecurityPolicyType.NoSecurity])
         self._server.set_endpoint("opc.tcp://localhost:0/freeopcua/server/")
 
+        self._log = logging.getLogger(__name__)
         if isinstance(devices, list):
             self._devices = devices
         else:
             raise TypeError("Server accepts list of devices as initialisation")
-
-    @property
-    def endpoint(self):
-        if self._server.aio_obj.bserver:
-            bserver = self._server.aio_obj.bserver
-            hostname, port = bserver.hostname, bserver.port
-            url = urlparse(f"opc.tcp://{hostname}:{port}")
-            return url
-        return self._server.aio_obj.endpoint
-
-    @endpoint.setter
-    def endpoint(self, value):
-        return self._server.set_endpoint(url=value)
-
-    def disable_clock(self):
-        self._server.disable_clock()
-
-    def get_namespace_index(self, url:str):
-        return self._server.get_namespace_index(url)
 
     def import_xml_and_populate_devices(self, path):
         node_list:list[ua.NumericNodeId] = self._server.import_xml(path=path)
@@ -75,31 +57,3 @@ class DeviceServer:
             driver = Driver(device)
             for node, method in driver.bind(deviceObject):
                 self._server.link_method(node, method)
-
-    def __del__(self):
-        if self._server.tloop.is_alive():
-            # if looping, stop the loop
-            self._server.tloop.stop() 
-
-    def __enter__(self):
-        self.start()
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.stop()
-
-    def is_started(self):
-        if self._server.aio_obj.bserver:
-            return self._server.aio_obj.bserver._server.is_serving()
-        return False
-
-    def start(self):
-        self._server.start()
-
-    def stop(self):
-        if self._server.aio_obj.bserver:
-            # if connected, stop connection
-            self._server.stop()
-        if self._server.tloop.is_alive():
-            # if looping, stop the loop
-            self._server.tloop.stop() 
