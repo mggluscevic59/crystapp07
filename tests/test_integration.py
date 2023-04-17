@@ -87,7 +87,6 @@ class integrationTester(unittest.TestCase):
                 # NOTE: no errors => test passed
                 pass
 
-    # TODO: implement test node management
     def test_node_manager_survives_device_offline(self):
         # Arrange
         with crystapp.julabo.Mock(fixture) as mock:
@@ -108,3 +107,11 @@ class integrationTester(unittest.TestCase):
         finally:
             # NOTE: no errors => test passed
             pass
+
+    def test_tp100_semi_client_side(self):
+        # Arrange
+        with crystapp.julabo.Mock(fixture) as mock:
+            with crystapp.Server([mock.endpoint.geturl()]) as server:
+                server.import_xml_and_populate_devices(".config/server.xml")
+                with crystapp.Inter(server.endpoint.geturl()):
+                    pass
