@@ -88,23 +88,23 @@ class integrationTester(unittest.TestCase):
                 pass
 
     # TODO: implement test node management
-    # def test_node_manager_survives_device_offline(self):
-    #     # Arrange
-    #     with crystapp.julabo.Mock(fixture) as mock:
-    #         pass
-    #     server = crystapp.Server([mock.endpoint.geturl()])
+    def test_node_manager_survives_device_offline(self):
+        # Arrange
+        with crystapp.julabo.Mock(fixture) as mock:
+            pass
+        server = crystapp.Server([mock.endpoint.geturl()])
 
-    #     nodes = server.import_xml_and_populate_devices(".config/server.xml")
-    #     device_idx = server.get_namespace_index(mock.endpoint.geturl())
-    #     type_idx, name = crystapp.find_object_type(nodes, server.types)
-    #     sut = server.objects.get_child(f"{device_idx}:{name}")
+        nodes = server.import_xml_and_populate_devices(".config/server.xml")
+        device_idx = server.get_namespace_index(mock.endpoint.geturl())
+        type_idx, name = crystapp.find_object_type(nodes, server.types)
+        sut = server.objects.get_child(f"{device_idx}:{name}")
 
-    #     # Act
-    #     try:
-    #         with server:
-    #             sut.call_method(f"{type_idx}:External_temperature")
-    #             print(mock.endpoint.geturl(), sut.endpoint.geturl())
-    #     # Assert
-    #     finally:
-    #         # NOTE: no errors => test passed
-    #         pass
+        # Act
+        try:
+            with server:
+                sut.call_method(f"{type_idx}:External_temperature")
+                print(mock.endpoint.geturl(), server.endpoint.geturl())
+        # Assert
+        finally:
+            # NOTE: no errors => test passed
+            pass

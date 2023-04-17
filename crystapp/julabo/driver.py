@@ -1,4 +1,6 @@
 import logging
+# import sys
+import asyncua.ua.uaerrors
 
 from asyncua import uamethod
 from asyncua.sync import SyncNode, ua
@@ -30,16 +32,22 @@ class Driver:
         def binder(bound):
             @uamethod
             def _method(parent:ua.NodeId, *argv):
-                if argv:
-                    try:
-                        input, *_ = argv
-                        return bound(input)
-                    except TypeError:
-                        nice_name = f"ns={parent.NamespaceIndex};i={parent.Identifier}"
-                        mssg = f"Node {nice_name} takes 1 positional argument but 2 were given"
-                        self._log.info(mssg)
-                else:
-                    return bound()
+                try:
+                    if argv:
+                        try:
+                            input, *_ = argv
+                            return bound(input)
+                        except TypeError:
+                            nice_name = f"ns={parent.NamespaceIndex};i={parent.Identifier}"
+                            mssg = f"Node {nice_name} takes 1 positional argument but 2 were given"
+                            self._log.info(mssg)
+                    else:
+                        return bound()
+                except ConnectionRefusedError:
+                    nice_name = f"ns={parent.NamespaceIndex};i={parent.Identifier}"
+                    mssg = f"Node {nice_name} not available"
+                    self._log.info(mssg)
+                    return asyncua.ua.uaerrors.BadCommunicationError()
             return _method
         methods_only = {
             "refs":ua.ObjectIds.HasComponent,
