@@ -42,7 +42,7 @@ class integrationTester(unittest.TestCase):
         # Assert
         self.assertEqual(28.22, result)
 
-    def test_mock_is_stared(self):
+    def test_mock_is_started(self):
         # Arrange
         with crystapp.julabo.Mock(fixture) as sut:
             print(sut.endpoint.geturl())
