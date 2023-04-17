@@ -1,7 +1,5 @@
 import logging
-# import asyncua.sync
 
-# from urllib.parse import urlparse
 from asyncua.sync import SyncNode, ua
 from .julabo.driver import Driver
 from .utility import silence_loggers, find_object_type
