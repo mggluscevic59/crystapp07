@@ -12,24 +12,28 @@ class LocalServer(baseServer):
     def __init__(self, url:str) -> None:
         super().__init__()
         # nodes shortcuts
+        self.objects:SyncNode = self._server.nodes.objects
         # self.types:SyncNode = self._server.nodes.types
-        # self.objects:SyncNode = self._server.nodes.objects
+
+        # TODO: implement security
+        # self._server.load_certificate("/home/miso/Projects/crystapp07/.config/cert.pem")
+        # self._server.load_private_key("/home/miso/Projects/crystapp07/.config/key.pem")
+        # self._server.set_security_policy([asyncua.sync.ua.SecurityPolicyType.Basic256Sha256_Sign])
+
         # silences some alerts
         self._server.set_security_policy([ua.SecurityPolicyType.NoSecurity])
         self._server.set_endpoint("opc.tcp://localhost:0/freeopcua/server/")
 
         self._log = logging.getLogger(__name__)
-        self._client = asyncua.sync.Client(url=url)
+        self._client = asyncua.sync.Client(url=url, tloop=self._server.tloop)
 
     def import_xml(self, path):
         return self._server.import_xml(path)
 
-        # self._url = urlparse(url)
+    def start(self):
+        self._client.connect()
+        return super().start()
 
-    # def __init__(self, path:str, external_thread=None) -> None:
-    # def __init__(self, main_server_url:str) -> None:
-    #     self._log = logging.getLogger(__name__)
-    #     self._server = asyncua.sync.Server()
-
-    #     self._url = urlparse(main_server_url)
-        # self._client = Client(url=path, tloop=external_thread)
+    def stop(self):
+        self._client.disconnect()
+        return super().stop()
