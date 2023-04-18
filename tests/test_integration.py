@@ -114,10 +114,9 @@ class integrationTester(unittest.TestCase):
                 with crystapp.Inter(server.endpoint.geturl()) as semi:
                     semi.import_xml(".config/localhost_3.xml")
                     namespace = mock.endpoint.geturl()
-                    # FIXME: no hidden property access
-                    idx = semi._client.get_namespace_index(namespace)
+                    idx = semi.client.get_namespace_index(namespace)
                     device:SyncNode = semi.objects.get_child(f"{idx}:JulaboMagio_test")
-                    update_props(device, semi._client)
+                    update_props(device, semi.client)
                     sut = device.get_child(f"{type_idx}:External_temperature")
 
                     # Assert

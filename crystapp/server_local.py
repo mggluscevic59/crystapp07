@@ -15,17 +15,27 @@ class LocalServer(baseServer):
         self.objects:SyncNode = self._server.nodes.objects
         # self.types:SyncNode = self._server.nodes.types
 
+        # vars
+        cert = "/home/miso/Projects/crystapp07/.config/cert.pem"
+        key = "/home/miso/Projects/crystapp07/.config/key.pem"
+        security_level = asyncua.sync.ua.SecurityPolicyType.Basic256Sha256_Sign
+
         # TODO: implement security
-        # self._server.load_certificate("/home/miso/Projects/crystapp07/.config/cert.pem")
-        # self._server.load_private_key("/home/miso/Projects/crystapp07/.config/key.pem")
-        # self._server.set_security_policy([asyncua.sync.ua.SecurityPolicyType.Basic256Sha256_Sign])
+        self._server.load_certificate(cert)
+        self._server.load_private_key(key)
+        self._server.set_security_policy([security_level])
+        self._server.set_endpoint("opc.tcp://localhost:4840/freeopcua/server/")
 
         # silences some alerts
-        self._server.set_security_policy([ua.SecurityPolicyType.NoSecurity])
-        self._server.set_endpoint("opc.tcp://localhost:0/freeopcua/server/")
+        # self._server.set_security_policy([ua.SecurityPolicyType.NoSecurity])
+        # self._server.set_endpoint("opc.tcp://localhost:0/freeopcua/server/")
 
         self._log = logging.getLogger(__name__)
         self._client = asyncua.sync.Client(url=url, tloop=self._server.tloop)
+
+    @property
+    def client(self):
+        return self._client
 
     def import_xml(self, path):
         return self._server.import_xml(path)
