@@ -1,12 +1,11 @@
 import unittest
 import crystapp
 
-from crystapp.utility import CFG as fixture
+from crystapp.utility import CFG as fixture, update_props, SyncNode
 
 class integrationTester(unittest.TestCase):
     def test_mock_vs_driver_communication_on_tp_100_access(self):
         # Arrange
-        fixture = crystapp.utility.CFG
         mock = crystapp.julabo.Mock(fixture)
         sut = None
 
@@ -21,7 +20,6 @@ class integrationTester(unittest.TestCase):
 
     def test_server_vs_mock_communication_on_tp_100_access(self):
         # Arrange
-        fixture = crystapp.utility.CFG
         with crystapp.julabo.Mock(fixture) as mock:
             server = crystapp.Server([mock.endpoint.geturl()])
             server.disable_clock()
@@ -35,14 +33,12 @@ class integrationTester(unittest.TestCase):
             # Act
             with server:
                 print(mock.endpoint.geturl(), server.endpoint.geturl())
-                # TODO: optimise => server as mock, not real for taking too long
-                # result = sut.call_method(f"{type_idx}:External_temperature", 0)
                 result = sut.call_method(f"{type_idx}:External_temperature")
 
         # Assert
         self.assertEqual(28.22, result)
 
-    def test_mock_is_stared(self):
+    def test_mock_is_started(self):
         # Arrange
         with crystapp.julabo.Mock(fixture) as sut:
             print(sut.endpoint.geturl())
@@ -87,7 +83,6 @@ class integrationTester(unittest.TestCase):
                 # NOTE: no errors => test passed
                 pass
 
-    # TODO: implement test node management
     def test_node_manager_survives_device_offline(self):
         # Arrange
         with crystapp.julabo.Mock(fixture) as mock:
@@ -103,8 +98,28 @@ class integrationTester(unittest.TestCase):
         try:
             with server:
                 sut.call_method(f"{type_idx}:External_temperature")
-                print(mock.endpoint.geturl(), sut.endpoint.geturl())
+                print(mock.endpoint.geturl(), server.endpoint.geturl())
         # Assert
         finally:
             # NOTE: no errors => test passed
             pass
+
+    def test_tp100_semi_client_side(self):
+        # Arrange
+        result = None
+        with crystapp.julabo.Mock(fixture) as mock:
+            with crystapp.Server([mock.endpoint.geturl()]) as server:
+                nodes = server.import_xml_and_populate_devices(".config/server.xml")
+                type_idx, _ = crystapp.find_object_type(nodes, server.types)
+                with crystapp.Inter(server.endpoint.geturl()) as semi:
+                    semi.import_xml(".config/localhost_3.xml")
+                    namespace = mock.endpoint.geturl()
+                    idx = semi.client.get_namespace_index(namespace)
+                    device:SyncNode = semi.objects.get_child(f"{idx}:JulaboMagio_test")
+                    update_props(device, semi.client)
+                    sut = device.get_child(f"{type_idx}:External_temperature")
+
+                    # Assert
+                    result = sut.read_value()
+        # Assert
+        self.assertEqual(28.22, result)
