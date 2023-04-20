@@ -3,6 +3,9 @@ import copy
 import psutil
 import asyncua.sync
 
+from sys import argv
+from os.path import abspath
+from pathlib import Path
 from socket import socket, AF_INET, SOCK_DGRAM
 from asyncua import uamethod
 from asyncua.sync import ua, SyncNode
@@ -29,6 +32,8 @@ ADDRESS_SPACE = {
         ],
     "xml"       : ".config/server.xml"
 }
+
+WRITABLE_JULABO = [2,8,17,24,30,33,36,39,46,42,45]
 
 # suggested logger format for mocks consistency with subprocess
 FMT = "%(asctime)-15s %(levelname)-5s %(name)s: %(message)s"
@@ -193,3 +198,8 @@ def update_props(parent:SyncNode, client:asyncua.sync.Client):
         old_value = serv_child.read_value()
         if value != old_value:
             serv_child.write_value(value)
+
+def calculate_path(path:str):
+    folder = argv[0]
+    result = abspath(folder+"/..")+"/"+path
+    return Path(result)
