@@ -218,3 +218,9 @@ def populate_device_urls(spawn) -> list[ParseResultBytes]:
             protocol = protocols.pop(0)
             urls.append(urlparse(protocol+"://"+hostname+":"+str(port)))
     return urls
+
+
+def is_object_type(node:SyncNode):
+    if ua.ObjectIds.BaseObjectType == node.read_type_definition().Identifier:
+        return True
+    return False

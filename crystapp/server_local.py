@@ -44,8 +44,8 @@ class LocalServer(baseServer):
     def client(self):
         return self._client
 
-    # def import_xml(self, path):
-    #     return self._server.import_xml(path)
+    def import_xml(self, path):
+        return self._server.import_xml(path)
 
     def start(self):
         self._client.connect()
@@ -55,29 +55,29 @@ class LocalServer(baseServer):
         self._client.disconnect()
         return super().stop()
 
-    def import_xml_and_populate_devices(self, path):
-        node_list:list[ua.NumericNodeId] = self._server.import_xml(path=path)
-        object_type = self._filter_object_type(node_list=node_list)
-        # all devices populated with same type
-        self._populate(self._devices, object_type=object_type)
-        return node_list
+    # def import_xml_and_populate_devices(self, path):
+    #     node_list:list[ua.NumericNodeId] = self._server.import_xml(path=path)
+    #     object_type = self._filter_object_type(node_list=node_list)
+    #     # all devices populated with same type
+    #     self._populate(self._devices, object_type=object_type)
+    #     return node_list
 
-    def _filter_object_type(self, node_list:list[ua.NumericNodeId]) -> SyncNode:
-        idx, name = find_object_type(node_list, self.types)
-        index = [
-            "0:ObjectTypes",
-            "0:BaseObjectType",
-            f"{idx}:{name}"
-            ]
-        return self.types.get_child(index)
+    # def _filter_object_type(self, node_list:list[ua.NumericNodeId]) -> SyncNode:
+    #     idx, name = find_object_type(node_list, self.types)
+    #     index = [
+    #         "0:ObjectTypes",
+    #         "0:BaseObjectType",
+    #         f"{idx}:{name}"
+    #         ]
+    #     return self.types.get_child(index)
 
-    def _populate(self, devices:list[str], object_type:SyncNode):
-        q_name = object_type.read_browse_name()
-        # NOTE: difference
-        for index, device in enumerate(devices):
-            idx = self._server.register_namespace(device)
-            name = str(q_name.Name)+str(index)
-            deviceObject = self.objects.add_object(idx, name, object_type)
+    # def _populate(self, devices:list[str], object_type:SyncNode):
+    #     q_name = object_type.read_browse_name()
+    #     # NOTE: difference
+    #     for index, device in enumerate(devices):
+    #         idx = self._server.register_namespace(device)
+    #         name = str(q_name.Name)+str(index)
+    #         deviceObject = self.objects.add_object(idx, name, object_type)
 
-            # bindings
-            update_props(deviceObject, self.client)
+    #         # bindings
+    #         update_props(deviceObject, self.client)
