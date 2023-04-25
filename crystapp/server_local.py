@@ -10,7 +10,7 @@ silence_loggers([logging.getLogger(x) for x in banned_loggers])
 
 class LocalServer(baseServer):
     # def __init__(self, url:str) -> None:
-    def __init__(self, certificate, private_key, server_url, device_urls:list) -> None:
+    def __init__(self, server_url, device_urls:list, certificate=None, private_key=None) -> None:
         super().__init__()
         # nodes shortcuts
         self.objects:SyncNode = self._server.nodes.objects
@@ -19,17 +19,18 @@ class LocalServer(baseServer):
         # vars
         url = server_url
         devices = device_urls
+        cert = certificate
+        key = private_key
+
+        # optional security
         if certificate and private_key:
-            cert = certificate
-            key = private_key
             security_level = asyncua.sync.ua.SecurityPolicyType.Basic256Sha256_Sign
+            self._server.load_certificate(cert)
+            self._server.load_private_key(key)
         else:
             security_level = asyncua.sync.ua.SecurityPolicyType.NoSecurity
-
-        self._server.load_certificate(cert)
-        self._server.load_private_key(key)
         self._server.set_security_policy([security_level])
-        
+
         # always hidden from other computers
         self._server.set_endpoint("opc.tcp://localhost:4840/freeopcua/server/")
 
