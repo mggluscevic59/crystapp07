@@ -39,6 +39,27 @@ WRITABLE_JULABO = [2,8,17,24,30,33,36,39,46,42,45]
 # suggested logger format for mocks consistency with subprocess
 FMT = "%(asctime)-15s %(levelname)-5s %(name)s: %(message)s"
 
+# DICT = {
+#     2 : "Active_set_point_channel",
+#     5 : "Bath_temperature",
+#     8 : "External_input",
+#     11 : "External_temperature",
+#     14 : "Heating_power",
+#     17 : "High_temperature",
+#     20 : "Identification",
+#     22 : "Is_started",
+#     24 : "Low_temperature",
+#     27 : "Safety_temperature",
+#     30 : "Self_tunning",
+#     33 : "Set_point_1",
+#     36 : "Set_point_2",
+#     39 : "Set_point_3",
+#     42 : "Start",
+#     43 : "Status",
+#     45 : "Stop",
+#     46 : "Temperature_control",
+# }
+
 # hostname, port
 def extract_socket_data(server):
     address:tuple = ("", 0)
@@ -219,8 +240,19 @@ def populate_device_urls(spawn) -> list[ParseResultBytes]:
             urls.append(urlparse(protocol+"://"+hostname+":"+str(port)))
     return urls
 
-
 def is_object_type(node:SyncNode):
     if ua.ObjectIds.BaseObjectType == node.read_type_definition().Identifier:
         return True
     return False
+
+def update_props_by_ns(ns:str, parent:SyncNode, cli:asyncua.sync.Client):
+    children:list[SyncNode] = parent.get_children()
+    idx = cli.get_namespace_index(ns)
+
+    for child in children:
+        node = cli.get_node(ua.NodeId(child.nodeid.Identifier, idx))
+        value = call_method_on_actual_node(node)
+
+        # NOTE: if prop value is different, write foo value
+        if child.read_value() != value:
+            child.write_value(value)
