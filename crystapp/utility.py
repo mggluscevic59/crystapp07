@@ -6,6 +6,7 @@ import asyncua.sync
 from sys import argv
 from os.path import abspath
 from pathlib import Path
+from urllib.parse import urlparse, ParseResultBytes
 from socket import socket, AF_INET, SOCK_DGRAM
 from asyncua import uamethod
 from asyncua.sync import ua, SyncNode
@@ -203,3 +204,17 @@ def calculate_path(path:str):
     folder = argv[0]
     result = abspath(folder+"/..")+"/"+path
     return Path(result)
+
+def populate_device_urls(spawn) -> list[ParseResultBytes]:
+    urls = []
+    protocols = []
+    for device in spawn.config["devices"]:
+        for transport in device["transports"]:
+            protocols.append(transport["type"])
+    for device in spawn.server.devices.values():
+        for transport in device.transports:
+            hostname, port = transport.address
+            # NOTE: remove first
+            protocol = protocols.pop(0)
+            urls.append(urlparse(protocol+"://"+hostname+":"+str(port)))
+    return urls
