@@ -256,3 +256,30 @@ def update_props_by_ns(ns:str, parent:SyncNode, cli:asyncua.sync.Client):
         # NOTE: if prop value is different, write foo value
         if child.read_value() != value:
             child.write_value(value)
+
+def call_method_on_actual_node_with_value(node:SyncNode, value):
+    parent:SyncNode = node.get_parent()
+    return parent.call_method(node, value)
+
+def read_write_props(nodes:list[SyncNode],
+                     namespace_array:list,
+                     client:asyncua.sync.Client,
+                     changes:dict
+                     ):
+    # decision branch
+    for node in nodes:
+        if len(changes):
+            if node.nodeid.NamespaceIndex in changes.keys():
+                # skip read for device & perform write
+                for id in list(changes[node.nodeid.NamespaceIndex]):
+                    value = changes[node.nodeid.NamespaceIndex].pop(id)
+                    namespace = namespace_array[node.nodeid.NamespaceIndex]
+                    idx:int = client.get_namespace_index(namespace)
+                    child:SyncNode = client.get_node(ua.NodeId(id, idx))
+                    if value != call_method_on_actual_node(child):
+                        print("writing changes ", str(child), value)
+                        call_method_on_actual_node_with_value(child, value)
+                    else:
+                        print("value unchanged, but no read")
+                return
+        update_props_by_ns(node.nodeid.NamespaceIndex, node, client)
