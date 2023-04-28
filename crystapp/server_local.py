@@ -9,26 +9,26 @@ banned_loggers = []
 silence_loggers([logging.getLogger(x) for x in banned_loggers])
 
 class LocalServer(baseServer):
-    # def __init__(self, url:str) -> None:
-    def __init__(self, server_url, device_urls:list, certificate=None, private_key=None) -> None:
+    def __init__(self, url:str) -> None:
+    # def __init__(self, server_url, device_urls:list, certificate=None, private_key=None) -> None:
         super().__init__()
         # nodes shortcuts
         self.objects:SyncNode = self._server.nodes.objects
         self.types:SyncNode = self._server.nodes.types
 
         # vars
-        url = server_url
-        devices = device_urls
-        cert = certificate
-        key = private_key
+        # url = server_url
+        # devices = device_urls
+        # cert = certificate
+        # key = private_key
 
         # optional security
-        if certificate and private_key:
-            security_level = asyncua.sync.ua.SecurityPolicyType.Basic256Sha256_Sign
-            self._server.load_certificate(cert)
-            self._server.load_private_key(key)
-        else:
-            security_level = asyncua.sync.ua.SecurityPolicyType.NoSecurity
+        # if certificate and private_key:
+        #     security_level = asyncua.sync.ua.SecurityPolicyType.Basic256Sha256_Sign
+        #     self._server.load_certificate(cert)
+        #     self._server.load_private_key(key)
+        # else:
+        security_level = asyncua.sync.ua.SecurityPolicyType.NoSecurity
         self._server.set_security_policy([security_level])
 
         # always hidden from other computers
@@ -36,10 +36,10 @@ class LocalServer(baseServer):
 
         self._log = logging.getLogger(__name__)
         self._client = asyncua.sync.Client(url=url, tloop=self._server.tloop)
-        if isinstance(devices, list):
-            self._devices = devices
-        else:
-            raise TypeError("Server accepts list of devices as initialisation")
+        # if isinstance(devices, list):
+        #     self._devices = devices
+        # else:
+        #     raise TypeError("Server accepts list of devices as initialisation")
 
     @property
     def client(self):
