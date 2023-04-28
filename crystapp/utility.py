@@ -3,6 +3,10 @@ import copy
 import psutil
 import asyncua.sync
 
+from sys import argv
+from os.path import abspath
+from pathlib import Path
+from urllib.parse import urlparse, ParseResultBytes
 from socket import socket, AF_INET, SOCK_DGRAM
 from asyncua import uamethod
 from asyncua.sync import ua, SyncNode
@@ -29,6 +33,8 @@ ADDRESS_SPACE = {
         ],
     "xml"       : ".config/server.xml"
 }
+
+WRITABLE_JULABO = [2,8,17,24,30,33,36,39,46,42,45]
 
 # suggested logger format for mocks consistency with subprocess
 FMT = "%(asctime)-15s %(levelname)-5s %(name)s: %(message)s"
@@ -193,3 +199,66 @@ def update_props(parent:SyncNode, client:asyncua.sync.Client):
         old_value = serv_child.read_value()
         if value != old_value:
             serv_child.write_value(value)
+
+def calculate_path(path:str):
+    folder = argv[0]
+    result = abspath(folder+"/..")+"/"+path
+    return Path(result)
+
+def populate_device_urls(spawn) -> list[ParseResultBytes]:
+    urls = []
+    protocols = []
+    for device in spawn.config["devices"]:
+        for transport in device["transports"]:
+            protocols.append(transport["type"])
+    for device in spawn.server.devices.values():
+        for transport in device.transports:
+            hostname, port = transport.address
+            # NOTE: remove first
+            protocol = protocols.pop(0)
+            urls.append(urlparse(protocol+"://"+hostname+":"+str(port)))
+    return urls
+
+def is_object_type(node:SyncNode):
+    if ua.ObjectIds.BaseObjectType == node.read_type_definition().Identifier:
+        return True
+    return False
+
+def update_props_by_ns(ns:str, parent:SyncNode, cli:asyncua.sync.Client):
+    children:list[SyncNode] = parent.get_children()
+    idx = cli.get_namespace_index(ns)
+
+    for child in children:
+        node = cli.get_node(ua.NodeId(child.nodeid.Identifier, idx))
+        value = call_method_on_actual_node(node)
+
+        # NOTE: if prop value is different, write foo value
+        if child.read_value() != value:
+            child.write_value(value)
+
+def call_method_on_actual_node_with_value(node:SyncNode, value):
+    parent:SyncNode = node.get_parent()
+    return parent.call_method(node, value)
+
+def read_write_props(nodes:list[SyncNode],
+                     namespace_array:list,
+                     client:asyncua.sync.Client,
+                     changes:dict
+                     ):
+    # decision branch
+    for node in nodes:
+        if len(changes):
+            if node.nodeid.NamespaceIndex in changes.keys():
+                # skip read for device & perform write
+                for id in list(changes[node.nodeid.NamespaceIndex]):
+                    value = changes[node.nodeid.NamespaceIndex].pop(id)
+                    namespace = namespace_array[node.nodeid.NamespaceIndex]
+                    idx:int = client.get_namespace_index(namespace)
+                    child:SyncNode = client.get_node(ua.NodeId(id, idx))
+                    if value != call_method_on_actual_node(child):
+                        print("writing changes ", str(child), value)
+                        call_method_on_actual_node_with_value(child, value)
+                    else:
+                        print("value unchanged, but no read")
+                return
+        update_props_by_ns(node.nodeid.NamespaceIndex, node, client)

@@ -1,7 +1,7 @@
 import unittest
 import crystapp
 
-from crystapp.utility import CFG as fixture, update_props, SyncNode
+from crystapp.utility import CFG as fixture, update_props, SyncNode, update_props_by_ns
 
 class integrationTester(unittest.TestCase):
     def test_mock_vs_driver_communication_on_tp_100_access(self):
@@ -112,12 +112,12 @@ class integrationTester(unittest.TestCase):
                 nodes = server.import_xml_and_populate_devices(".config/server.xml")
                 type_idx, _ = crystapp.find_object_type(nodes, server.types)
                 with crystapp.Inter(server.endpoint.geturl()) as semi:
-                    semi.import_xml(".config/localhost_3.xml")
+                    semi.import_xml(".config/localhost_5.xml")
                     namespace = mock.endpoint.geturl()
                     idx = semi.client.get_namespace_index(namespace)
-                    device:SyncNode = semi.objects.get_child(f"{idx}:JulaboMagio_test")
-                    update_props(device, semi.client)
-                    sut = device.get_child(f"{type_idx}:External_temperature")
+                    device:SyncNode = semi.objects.get_child(f"{idx}:JulaboMagio")
+                    update_props_by_ns(namespace, device, semi.client)
+                    sut = device.get_child(f"{idx}:External_temperature")
 
                     # Assert
                     result = sut.read_value()
