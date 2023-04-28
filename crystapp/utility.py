@@ -39,27 +39,6 @@ WRITABLE_JULABO = [2,8,17,24,30,33,36,39,46,42,45]
 # suggested logger format for mocks consistency with subprocess
 FMT = "%(asctime)-15s %(levelname)-5s %(name)s: %(message)s"
 
-# DICT = {
-#     2 : "Active_set_point_channel",
-#     5 : "Bath_temperature",
-#     8 : "External_input",
-#     11 : "External_temperature",
-#     14 : "Heating_power",
-#     17 : "High_temperature",
-#     20 : "Identification",
-#     22 : "Is_started",
-#     24 : "Low_temperature",
-#     27 : "Safety_temperature",
-#     30 : "Self_tunning",
-#     33 : "Set_point_1",
-#     36 : "Set_point_2",
-#     39 : "Set_point_3",
-#     42 : "Start",
-#     43 : "Status",
-#     45 : "Stop",
-#     46 : "Temperature_control",
-# }
-
 # hostname, port
 def extract_socket_data(server):
     address:tuple = ("", 0)

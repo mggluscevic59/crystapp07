@@ -3,11 +3,11 @@ import asyncua.sync
 
 # from asyncua.sync import SyncNode, ua
 from asyncua.sync import SyncNode
-# from .utility import silence_loggers
+from .utility import silence_loggers
 from .server_base import baseServer
 
-# banned_loggers = []
-# silence_loggers([logging.getLogger(x) for x in banned_loggers])
+banned_loggers = ["asyncua.client.ua_client.UaClient", "asyncua.client.client"]
+silence_loggers([logging.getLogger(x) for x in banned_loggers])
 
 class LocalServer(baseServer):
     def __init__(self, url:str) -> None:
