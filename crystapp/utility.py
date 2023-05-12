@@ -247,7 +247,7 @@ def read_write_props(nodes:list[SyncNode],
                      ):
     # decision branch
     for node in nodes:
-        if len(changes):
+        if len(changes[node.nodeid.NamespaceIndex]):
             if node.nodeid.NamespaceIndex in changes.keys():
                 # skip read for device & perform write
                 for id in list(changes[node.nodeid.NamespaceIndex]):
@@ -261,4 +261,5 @@ def read_write_props(nodes:list[SyncNode],
                     else:
                         print("value unchanged, but no read")
                 return
-        update_props_by_ns(node.nodeid.NamespaceIndex, node, client)
+        ns = namespace_array[node.nodeid.NamespaceIndex]
+        update_props_by_ns(ns, node, client)
